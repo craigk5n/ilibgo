@@ -13,8 +13,8 @@ to read any image file that the base Go image package supports.
 
 ## History
 
-This could was ported to Go from the original [version in C](https://github.com/craigk5n/ilib).
-The API remains as close to the original as it made sense to do.
+This code was ported to Go from the original [version in C](https://github.com/craigk5n/ilib).
+The API remains very close to the original C code.
 All the functions dropped the "I" at the start since Go supports
 namespaces.  The original C library was modeled after the
 X11 functions, documented
@@ -27,7 +27,7 @@ Additional BDF Fonts can be found at:
   [https://gitlab.freedesktop.org/xorg/font](https://gitlab.freedesktop.org/xorg/font)
 
 Note that fonts can be loaded as external fonts at run-time, or
-fonts can be embedded in the binary by using the [`bdftogo`](clients/bdftogo)
+fonts can be embedded in the binary by using the [`bdftogo`](https://github.com/craigk5n/ilibgo/tree/main/bdftogo)
 tool included in this package.
 
 
