@@ -1,0 +1,6 @@
+.DS_Store
+*.gif
+*.ppm
+.vscode
+out.png
+test.png
