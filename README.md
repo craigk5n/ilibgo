@@ -13,26 +13,26 @@ to read any image file that the base Go image package supports.
 
 ## History
 
-This could was ported to Go from the original (version in C)[https://github.com/craigk5n/ilib].
+This could was ported to Go from the original [version in C](https://github.com/craigk5n/ilib).
 The API remains as close to the original as it made sense to do.
 All the functions dropped the "I" at the start since Go supports
 namespaces.  The original C library was modeled after the
 X11 functions, documented
-(here)[https://www.x.org/releases/X11R7.6/doc/man/man3/] as man pages.
+[here](https://www.x.org/releases/X11R7.6/doc/man/man3/) as man pages.
 
 
 ## BDF Fonts
 
 Additional BDF Fonts can be found at:
-  (https://gitlab.freedesktop.org/xorg/font)[https://gitlab.freedesktop.org/xorg/font]
+  [https://gitlab.freedesktop.org/xorg/font](https://gitlab.freedesktop.org/xorg/font)
 
 Note that fonts can be loaded as external fonts at run-time, or
-fonts can be embedded in the binary by using the (`bdftogo`)[clients/bdftogo]
+fonts can be embedded in the binary by using the [`bdftogo`](clients/bdftogo)
 tool included in this package.
 
 
 Note that some of the BDF fonts are bundled with this package.  Please
-see the (COPYING)[https://gitlab.freedesktop.org/xorg/font/adobe-100dpi/-/blob/master/COPYING]
+see the [COPYING](https://gitlab.freedesktop.org/xorg/font/adobe-100dpi/-/blob/master/COPYING)
 notice
 
 > Copyright 1984-1989, 1994 Adobe Systems Incorporated.
@@ -57,11 +57,11 @@ notice
 
 
 Edit/Import/Create BDF fonts with
-(FontForge)[https://github.com/fontforge/fontforge].
+[FontForge](https://github.com/fontforge/fontforge).
 
 ## Building
 `go build`
 
 
 ## History
-See (ChangeLog)[ChangeLog.md]
+See [ChangeLog](ChangeLog.md)
