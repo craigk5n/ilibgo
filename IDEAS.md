@@ -192,6 +192,7 @@ Small programs that showcase the library and/or are useful on their own. Each is
 **Done:**
 - **`iconvert`** ✅ — format converter (`iconvert in.png out.tiff`), thin wrapper over `ReadImageFile`/`FileType`/`WriteImageFile`.
 - **`chart`** ✅ — bar-chart generator from `label=value` args or `label,value` stdin; a general successor to the hardcoded `webreport` grapher.
+- **`qr` package + `qrgen` tool** ✅ — dependency-free QR encoder (byte mode, all versions/ECC levels, Reed-Solomon, mask selection) plus a renderer that draws it with `FillRectangle`. See §10.
 
 **Examples (showcase value):**
 - **`captcha`** — distorted-text CAPTCHA: per-char `DrawStringRotatedAngle`, noise via `DrawLine`/`SetPoint`. Exercises rotation + alpha.
@@ -220,7 +221,7 @@ Feasible, medium effort for basic support; high effort for full feature parity. 
 
 ## 10. QR codes
 
-- **Generator — easy and a good fit.** QR encoding is well-defined; use a mature encoder (`rsc.io/qr` or `github.com/skip2/go-qrcode`) to get the module bit-matrix, then render it with `FillRectangle` per dark module and save via `WriteImageFile`. A `qr` example tool is low effort and a strong demo. Implementing the encoder from scratch (Reed–Solomon ECC, masking) is a medium project but doable and dependency-free.
+- **Generator — ✅ DONE (from scratch, no deps).** Implemented as the `qr` package (byte mode, automatic smallest-version selection for all 40 versions, the four ECC levels, Reed–Solomon over GF(256), and lowest-penalty mask selection) with a `qrgen` tool that renders the module matrix via `FillRectangle`. Output was verified to scan with an independent ZXing-port decoder across versions 1–17 and all ECC levels; a golden-fingerprint test locks the layout against regressions. (Original note: a mature encoder like `rsc.io/qr` or `skip2/go-qrcode` would also work, but the from-scratch route keeps the project dependency-free.)
 - **Decoder — possible but largely out of scope.** Decoding is a computer-vision task (binarization, finder-pattern detection, perspective correction, grid sampling, then RS error correction). Mature ports exist (`github.com/makiuchi-d/gozxing`, `github.com/liyue201/goqr`). `ilibgo`'s role would only be loading the image (`ReadImageFile` → `image.Image`); the analysis belongs in a dedicated CV library. Reasonable as a `qrdecode` example that wraps `gozxing`, but not a core library feature — `ilibgo` is about image *creation/manipulation*, not *analysis*.
 
 ---
