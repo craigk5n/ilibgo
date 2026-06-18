@@ -193,9 +193,9 @@ Small programs that showcase the library and/or are useful on their own. Each is
 - **`iconvert`** ✅ — format converter (`iconvert in.png out.tiff`), thin wrapper over `ReadImageFile`/`FileType`/`WriteImageFile`.
 - **`chart`** ✅ — bar-chart generator from `label=value` args or `label,value` stdin; a general successor to the hardcoded `webreport` grapher.
 - **`qr` package + `qrgen` tool** ✅ — dependency-free QR encoder (byte mode, all versions/ECC levels, Reed-Solomon, mask selection) plus a renderer that draws it with `FillRectangle`. See §10.
+- **`captcha`** ✅ — distorted-text CAPTCHA: per-char `DrawStringRotatedAngle` with random angle/jitter/color, noise lines (`DrawLine`) and speckle (`SetPoint`); prints the answer and is seedable for reproducibility.
 
 **Examples (showcase value):**
-- **`captcha`** — distorted-text CAPTCHA: per-char `DrawStringRotatedAngle`, noise via `DrawLine`/`SetPoint`. Exercises rotation + alpha.
 - **`sparkline`** — tiny inline trend image from a number list; minimal "hello world" for the draw API.
 - **`watermark`** — overlay semi-transparent text/logo onto a loaded image; demonstrates the alpha `NewColor` + image round-trip.
 - **`fontsheet`** — render a full glyph specimen sheet for a bundled font by iterating the embedded `fonts.FS`; doubles as visual font QA.
