@@ -151,24 +151,25 @@ func CreateImageWithBackground(width int, height int, background Color) *Image {
 // The file is left open for the caller to close.
 func WriteImageFile(f *os.File, img *Image, format ImageFormat) error {
 	var err error
-	defer f.Close()
 	switch format {
 	case FormatPNG:
-		png.Encode(f, img.data)
+		err = png.Encode(f, img.data)
 	case FormatJPEG:
 		// TODO: Allow user to specify quality
 		var options jpeg.Options = jpeg.Options{Quality: jpeg.DefaultQuality}
-		jpeg.Encode(f, img.data, &options)
+		err = jpeg.Encode(f, img.data, &options)
 	case FormatGIF:
 		var options gif.Options = gif.Options{NumColors: 256}
-		gif.Encode(f, img.data, &options)
+		err = gif.Encode(f, img.data, &options)
 	case FormatBMP:
-		bmp.Encode(f, img.data)
+		err = bmp.Encode(f, img.data)
 	case FormatTIFF:
-		var tiffOptions tiff.Options = tiff.Options{Compression: tiff.LZW}
-		tiff.Encode(f, img.data, &tiffOptions)
+		// x/image/tiff's encoder only supports Uncompressed and Deflate;
+		// LZW is decode-only and returns "unsupported compression".
+		var tiffOptions tiff.Options = tiff.Options{Compression: tiff.Deflate}
+		err = tiff.Encode(f, img.data, &tiffOptions)
 	case FormatPPM:
-		ppm.Encode(f, img.data)
+		err = ppm.Encode(f, img.data)
 	case FormatPGM:
 		// TODO: Can we force PGM here?
 		err = errors.New("writing PGM not yet supported")

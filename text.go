@@ -275,8 +275,9 @@ func DrawStringRotatedAngle(image *Image, gc GraphicsContext, x int, y int, text
 	chary := y
 	fontHeight, _ := GetFontSize(gc.font)
 
-	for loop := 0; loop < len(text); loop++ {
-		char := text[loop:loop]
+	chars := []rune(text)
+	for loop := 0; loop < len(chars); loop++ {
+		char := string(chars[loop])
 		if char == "\n" {
 			chary += fontHeight
 			charx = x

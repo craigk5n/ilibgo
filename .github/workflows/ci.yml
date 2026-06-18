@@ -1,0 +1,72 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      # Minimum statement coverage for the library package.
+      COVERAGE_THRESHOLD: "95.0"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: stable
+          check-latest: true
+
+      - name: Verify formatting
+        # Scoped to the hand-maintained library and test sources at the repo
+        # root. Generated font tables (fonts/) and the command-line tools are
+        # intentionally excluded.
+        run: |
+          unformatted="$(gofmt -l *.go)"
+          if [ -n "$unformatted" ]; then
+            echo "These files are not gofmt-clean:"
+            echo "$unformatted"
+            exit 1
+          fi
+
+      - name: Vet
+        run: go vet ./...
+
+      - name: Build
+        run: go build ./...
+
+      - name: Test (race + coverage)
+        # Run all tests, but measure coverage of the importable library
+        # package only. The command packages (sample, thumbnails, webreport,
+        # displayfont) and generated font packages have no tests and would
+        # otherwise dilute the figure.
+        run: |
+          go test -race ./...
+          go test -race -covermode=atomic -coverprofile=coverage.out github.com/craigk5n/ilibgo
+
+      - name: Enforce coverage threshold
+        run: |
+          total="$(go tool cover -func=coverage.out | awk '/^total:/ {print $3}' | tr -d '%')"
+          echo "Library statement coverage: ${total}%"
+          awk -v total="$total" -v threshold="$COVERAGE_THRESHOLD" 'BEGIN {
+            if (total + 0 < threshold + 0) {
+              printf "FAIL: coverage %.1f%% is below threshold %.1f%%\n", total, threshold
+              exit 1
+            }
+            printf "PASS: coverage %.1f%% meets threshold %.1f%%\n", total, threshold
+          }'
+
+      - name: Upload coverage profile
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: coverage.out

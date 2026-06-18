@@ -13,49 +13,54 @@ func colorsMatch(color1 Color, color2 Color) bool {
 	return r1 == r2 && g1 == g2 && b1 == b2
 }
 
+// FloodFill replaces the contiguous region of pixels matching the color at
+// (x, y) with the graphics context's foreground color. It uses an explicit
+// scanline stack rather than recursion so that large regions cannot overflow
+// the goroutine stack.
 func FloodFill(image *Image, gc GraphicsContext, x int, y int) error {
-	/* Get the color we are replacing with the flood fill */
+	if x < 0 || x >= image.width || y < 0 || y >= image.height {
+		return nil
+	}
+
+	/* The color we are replacing with the flood fill */
 	origColor := GetPoint(image, x, y)
 
-	/* find left side, filling along the way */
-	fillL := x
-	inLine := true
-	for inLine {
-		SetPoint(image, gc, fillL, y)
-		fillL--
-		color := GetPoint(image, fillL, y)
-
-		if fillL < 0 {
-			inLine = false
-		} else {
-			inLine = colorsMatch(color, origColor)
-		}
+	// Nothing to do if the seed already has the fill color; filling anyway
+	// would never stop matching origColor and could loop forever.
+	if colorsMatch(origColor, gc.foreground) {
+		return nil
 	}
-	fillL++
-	fillR := x
-	/* find right side, filling along the way */
-	inLine = true
-	for inLine {
-		SetPoint(image, gc, fillR, y)
-		fillR++
-		color := GetPoint(image, fillR, y)
-		if fillR >= image.width {
-			inLine = false
-		} else {
-			inLine = colorsMatch(color, origColor)
-		}
-	}
-	fillR--
 
-	/* search top and bottom */
-	for i := fillL; i <= fillR; i++ {
-		color := GetPoint(image, i, y-1)
-		if y > 0 && colorsMatch(color, origColor) {
-			FloodFill(image, gc, i, y-1)
+	stack := []Point{{x: x, y: y}}
+	for len(stack) > 0 {
+		p := stack[len(stack)-1]
+		stack = stack[:len(stack)-1]
+
+		// Skip pixels already recolored (or never matching) since being queued.
+		if !colorsMatch(GetPoint(image, p.x, p.y), origColor) {
+			continue
 		}
-		color = GetPoint(image, i, y+1)
-		if y < image.height && colorsMatch(color, origColor) {
-			FloodFill(image, gc, i, y+1)
+
+		/* find left side of this run */
+		fillL := p.x
+		for fillL-1 >= 0 && colorsMatch(GetPoint(image, fillL-1, p.y), origColor) {
+			fillL--
+		}
+		/* find right side of this run */
+		fillR := p.x
+		for fillR+1 < image.width && colorsMatch(GetPoint(image, fillR+1, p.y), origColor) {
+			fillR++
+		}
+
+		/* fill the run and queue matching pixels above and below */
+		for i := fillL; i <= fillR; i++ {
+			SetPoint(image, gc, i, p.y)
+			if p.y-1 >= 0 && colorsMatch(GetPoint(image, i, p.y-1), origColor) {
+				stack = append(stack, Point{x: i, y: p.y - 1})
+			}
+			if p.y+1 < image.height && colorsMatch(GetPoint(image, i, p.y+1), origColor) {
+				stack = append(stack, Point{x: i, y: p.y + 1})
+			}
 		}
 	}
 
