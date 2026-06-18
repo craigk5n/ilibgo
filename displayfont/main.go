@@ -1,10 +1,11 @@
 // Create a PNG file that displays the font for ASCII values up to 255.
 // Usage:
-//    displayfont [options] -infile fontfile -outfile output.png
 //
-//    where options are:
-//    -hex	display ascii char numbers in hex
-//    -dec	display ascii char numbers in decimal (default)
+//	displayfont [options] -infile fontfile -outfile output.png
+//
+//	where options are:
+//	-hex	display ascii char numbers in hex
+//	-dec	display ascii char numbers in decimal (default)
 package main
 
 import (
@@ -17,12 +18,12 @@ import (
 	"github.com/craigk5n/ilibgo"
 )
 
-//  12-Aug-2022 Craig Knudsen craig@k5n.us
-//		Converted from C to go
-//  19-Jul-1999	Added -png option
-//		Craig Knudsen	cknudsen@radix.net
-//  12-Apr-1999	Created
-//		Craig Knudsen	cknudsen@radix.net
+//	 12-Aug-2022 Craig Knudsen craig@k5n.us
+//			Converted from C to go
+//	 19-Jul-1999	Added -png option
+//			Craig Knudsen	cknudsen@radix.net
+//	 12-Apr-1999	Created
+//			Craig Knudsen	cknudsen@radix.net
 func main() {
 	outfile := ""
 	infile := ""
@@ -72,7 +73,7 @@ func main() {
 	grey, _ := ilibgo.AllocNamedColor("grey")
 	navy, _ := ilibgo.AllocNamedColor("navy")
 	ilibgo.SetForeground(&gc, white)
-	ilibgo.FillRectangle(image, gc, 0, 0, width, height)
+	image.FillRectangle(gc, 0, 0, width, height)
 	ilibgo.SetForeground(&gc, black)
 
 	x := 5
@@ -84,7 +85,7 @@ func main() {
 		} else if loop > 0 {
 			x += cellWidth
 		}
-		ilibgo.DrawRectangle(image, gc, x, y, cellWidth, cellHeight)
+		image.DrawRectangle(gc, x, y, cellWidth, cellHeight)
 		var temp string
 		if useHex {
 			temp = fmt.Sprintf("%02X", loop)
@@ -96,9 +97,9 @@ func main() {
 		subx := x + (cellWidth-w)/2
 		suby := y + h + 2
 		ilibgo.SetForeground(&gc, navy)
-		ilibgo.FillRectangle(image, gc, x+2, y+2, cellWidth-3, h)
+		image.FillRectangle(gc, x+2, y+2, cellWidth-3, h)
 		ilibgo.SetForeground(&gc, white)
-		ilibgo.DrawString(image, gc, subx, suby-1, temp)
+		image.DrawString(gc, subx, suby-1, temp)
 
 		ilibgo.SetFont(&gc, font)
 		ilibgo.SetForeground(&gc, black)
@@ -108,10 +109,10 @@ func main() {
 		suby = y + cellHeight - 6
 		// draw a baseline
 		ilibgo.SetForeground(&gc, grey)
-		ilibgo.DrawLine(image, gc, x+1, suby, x+cellWidth-1, suby)
+		image.DrawLine(gc, x+1, suby, x+cellWidth-1, suby)
 		// draw the letter
 		ilibgo.SetForeground(&gc, black)
-		ilibgo.DrawString(image, gc, subx, suby, temp)
+		image.DrawString(gc, subx, suby, temp)
 	}
 
 	// Write PNG output file.
