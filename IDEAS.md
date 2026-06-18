@@ -155,7 +155,9 @@ Covered in §1.9 — also a performance issue: recursion + per-pixel `GetPoint` 
 
 ## 6. Fonts & packaging
 
-### 6.1 Replace generated `.go` font files with `//go:embed`
+### 6.1 Replace generated `.go` font files with `//go:embed` — ✅ DONE
+**Implemented.** The bundled fonts are now canonical `.bdf` files embedded per-foundry via `//go:embed *.bdf`; the `Font_xxx() []string` accessors are preserved as thin wrappers (non-breaking), and `LoadFontFromBytes` was added. `bdftogo` is retained as an optional tool but is no longer part of the build. Original notes below for reference.
+
 `bdftogo` converts each `.bdf` into a Go file holding a giant `[]string`. With Go ≥1.16 you can instead embed the raw `.bdf` bytes:
 ```go
 //go:embed fonts/adobe_100dpi/helvR24.bdf

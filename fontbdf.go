@@ -2,6 +2,7 @@ package ilibgo
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
 	"os"
 	"strconv"
@@ -86,21 +87,26 @@ type BdfFont struct {
 // Example usage:
 // LoadFontFromFile("timR12.bdf", "timR12")
 func LoadFontFromFile(path string, name string) (*Font, error) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+	return LoadFontFromBytes(name, data)
+}
+
+// LoadFontFromBytes parses a BDF font from its raw bytes, for example a file
+// embedded with go:embed. It splits the data into lines (handling both "\n"
+// and "\r\n") and delegates to LoadFontFromData.
+func LoadFontFromBytes(name string, data []byte) (*Font, error) {
 	var lines []string = make([]string, 0)
-	fp, err := os.Open(path)
-	if err != nil {
+	scanner := bufio.NewScanner(bytes.NewReader(data))
+	for scanner.Scan() {
+		lines = append(lines, scanner.Text())
+	}
+	if err := scanner.Err(); err != nil {
 		return nil, err
 	}
-	defer fp.Close()
-	fileScanner := bufio.NewScanner(fp)
-	for fileScanner.Scan() {
-		lines = append(lines, fileScanner.Text())
-	}
-	ret, err := LoadFontFromData(name, lines)
-	if err != nil {
-		return nil, err
-	}
-	return ret, nil
+	return LoadFontFromData(name, lines)
 }
 
 func trimQuotes(s string) string {

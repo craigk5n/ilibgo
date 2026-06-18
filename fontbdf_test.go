@@ -92,6 +92,19 @@ func TestLoadFontFromFile(t *testing.T) {
 	}
 }
 
+func TestLoadFontFromBytes(t *testing.T) {
+	f, err := LoadFontFromBytes("fixture", []byte(fixtureBDF))
+	if err != nil {
+		t.Fatalf("LoadFontFromBytes: %v", err)
+	}
+	if f.font.pixelSize != 8 {
+		t.Errorf("pixelSize = %d, want 8", f.font.pixelSize)
+	}
+	if a := FontBDFGetRune(f.font, 'A'); a == nil || a.actualWidth != 8 {
+		t.Errorf("glyph 'A' not parsed correctly: %v", a)
+	}
+}
+
 func TestLoadFontFromFileMissing(t *testing.T) {
 	if _, err := LoadFontFromFile(filepath.Join(t.TempDir(), "nope.bdf"), "x"); err == nil {
 		t.Error("LoadFontFromFile on missing path expected error")
