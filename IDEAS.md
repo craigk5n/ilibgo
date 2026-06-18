@@ -65,7 +65,9 @@ func (img *Image) FillRectangle(gc *GraphicsContext, r image.Rectangle) error
 ```
 This reads better (`img.FillRectangle(...)`), enables a fluent style, and lets `Image` implement `image.Image`/`draw.Image` (see §4.1). The current shape is a literal C port.
 
-### 2.3 Remove the inconsistent `I` prefix
+### 2.3 Remove the inconsistent `I` prefix — ✅ DONE
+**Implemented.** Renamed to `DrawArc`, `DrawEnclosedArc`, `FillArc`, `DrawCircle`, `FillCircle`, `DrawEllipse`; the old `IXxx` names are kept as `// Deprecated:` forwarding aliases in `deprecated.go`. Original note below.
+
 Most functions dropped the C `I` prefix, but these kept it: `IDrawArc`, `IDrawEnclosedArc`, `IFillArc`, `IDrawCircle`, `IFillCircle`, `IDrawEllipse` (`arc.go`, `circle.go`). Rename for consistency (`DrawArc`, `FillArc`, …). Keep deprecated aliases for one release if backward-compat matters.
 
 ### 2.4 Don't return `error` you never produce

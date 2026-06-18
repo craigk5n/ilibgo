@@ -77,11 +77,11 @@ func TestFillArcFullCircle(t *testing.T) {
 	// a1=360, a2=0 makes the span >= 359.9 after the y-flip, hitting the
 	// "draw a full circle, no center point" branch.
 	img := newWhiteImage(t, 60, 60)
-	if err := IFillArc(img, redGC(t), 30, 30, 20, 20, 360, 0); err != nil {
+	if err := FillArc(img, redGC(t), 30, 30, 20, 20, 360, 0); err != nil {
 		t.Fatal(err)
 	}
 	if countSet(img) == 0 {
-		t.Error("full-circle IFillArc drew nothing")
+		t.Error("full-circle FillArc drew nothing")
 	}
 }
 
