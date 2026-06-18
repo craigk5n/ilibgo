@@ -1,0 +1,53 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Overview
+
+`ilibgo` is a Go image library (module `github.com/craigk5n/ilibgo`, package `ilibgo`) for reading, creating, manipulating, and saving images, with a focus on drawing primitives (lines, arcs, circles, rectangles, polygons, flood fill) and rendering text using X11 BDF bitmap fonts. It was ported from the original [C library `ilib`](https://github.com/craigk5n/ilib); the API stays close to the C version, which was itself modeled after X11 graphics functions.
+
+## Commands
+
+```bash
+go build ./...          # build the library and all tools
+go vet ./...            # static analysis
+go test ./...           # run tests (note: no test files exist yet)
+```
+
+Build/run the example and tools (each is its own `package main`):
+
+```bash
+go run ./sample         # generates out.png demonstrating the API
+go run ./displayfont -infile fonts/.../X.bdf -outfile out.png
+go run ./thumbnails -w 120 -h 120 out.png in1.jpg in2.jpg
+go run ./webreport [-tod|-dom|-dow|-moy] access.log
+go run ./bdftogo -infile X.bdf -package mypkg   # convert BDF font -> embeddable .go
+```
+
+## Architecture
+
+The root directory is the `ilibgo` library package. Each source file holds one concern:
+
+- **`ilib.go`** — core types and file I/O. Defines `Image`, `Color`, `Font`, `GraphicsContext`, `Point`, `ImageOption`; `CreateImage`/`CreateImageWithBackground`; `ReadImageFile`/`WriteImageFile`; format detection (`FormatStringToType`, `FileType`, `IsSupportedFormat`). Reading uses Go's `image.Decode` (any registered format); writing supports PNG, JPEG, GIF, BMP, TIFF, PPM (PGM/PBM/XPM are stubbed and return errors).
+- **`const.go`** — enums/constants: `ImageFormat`, `LineStyle`, `FillStyle`, `TextStyle`, `TextDirection`, and version info.
+- **`igc.go`** — `GraphicsContext` (GC) construction and setters (`CreateGraphicsContext`, `SetForeground`, `SetBackground`, `SetFont`, `SetLineWidth`, `SetLineStyle`, `SetTextStyle`).
+- **`color.go`** — `AllocColor(r,g,b)` and `AllocNamedColor(name)` backed by an embedded X11 `rgb.txt` color map.
+- **Drawing primitives** — `point.go`, `line.go`, `arc.go` (arcs/ellipses), `circle.go`, `rectangle.go`, `polygon.go`, `flood.go`, `copy.go` (`CopyImage`, `CopyImageScaled`).
+- **`text.go`** — text rendering: `DrawString`, `DrawStringRotated` (left-to-right / top-to-bottom / bottom-to-top), `DrawStringRotatedAngle`, and `TextDimensions`/`TextWidth`/`TextHeight`. Implements the `TextStyle` effects (etched/shadowed).
+- **`fontbdf.go`** — BDF font parser. `LoadFontFromFile(path, name)` reads a `.bdf` file; `LoadFontFromData(name, lines)` parses already-loaded lines (used by embedded fonts). ASCII chars are indexed into a `[256]BdfChar` array; non-ASCII go into `otherChars`.
+
+### Key API conventions
+
+- **Functional style, not methods.** Almost all operations are package-level functions taking explicit `*Image` and a `GraphicsContext` value, e.g. `ilibgo.FillRectangle(img, gc, x, y, w, h)`. The GC carries foreground/background color, font, line/text style — set it up, then pass it to draw calls. This mirrors the X11 C origin.
+- **Dropped "I" prefix — but inconsistently.** The port dropped the leading `I` from most names (`IAllocColor` → `AllocColor`). Some functions still retain it: `IFillArc`, `IDrawArc`, `IDrawCircle`, `IFillCircle`, `IDrawEllipse`, `IDrawEnclosedArc`. Check the actual name before calling; don't assume the prefix is gone everywhere.
+- **Unexported struct fields.** `Image`, `Color`, `Font`, `Point`, `GraphicsContext` have private fields; manipulate them only through the provided functions (e.g. `ImageWidth(img)`, not `img.width`).
+
+### Fonts
+
+`fonts/` contains BDF fonts pre-converted to Go source via `bdftogo`, grouped by foundry (`adobe_100dpi`, `adobe_utopia_100dpi`, `bh_lucidatypewriter_100dpi`). Each font is exposed as a function returning `[]string` (e.g. `font.Font_helvR24()`), passed to `LoadFontFromData`. Fonts can either be embedded this way or loaded at runtime from a `.bdf` file with `LoadFontFromFile`. The `bdftogo` tool regenerates these embeddable files from raw `.bdf` sources.
+
+## Notes
+
+- There are currently **no `_test.go` files** in this repo.
+- Several features are stubbed/TODO: PGM/PBM/XPM writing, line widths > 3, dashed line styles, tiled/stippled fills, escape-sequence (non-ASCII named) character handling in text rendering.
+- `.gitignore` excludes generated output (`out.png`, `test.png`, `*.gif`, `*.ppm`).
