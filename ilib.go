@@ -30,9 +30,12 @@ import (
 	"strings"
 )
 
+// Point is an (X, Y) coordinate. Its fields are exported so callers can
+// construct points directly (e.g. for DrawPolygon/FillPolygon), either with a
+// struct literal (Point{X: 1, Y: 2}) or the Pt helper.
 type Point struct {
-	x int
-	y int
+	X int
+	Y int
 }
 
 type Color struct {

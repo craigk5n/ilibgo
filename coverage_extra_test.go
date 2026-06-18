@@ -63,7 +63,7 @@ func TestDrawLineSteepAndUpward(t *testing.T) {
 func TestFillPolygonRectangle(t *testing.T) {
 	// A rectangle has vertical and horizontal edges, exercising both special
 	// cases in the polygon scanline intersection logic.
-	rect := []Point{{x: 2, y: 2}, {x: 12, y: 2}, {x: 12, y: 12}, {x: 2, y: 12}}
+	rect := []Point{{X: 2, Y: 2}, {X: 12, Y: 2}, {X: 12, Y: 12}, {X: 2, Y: 12}}
 	img := newWhiteImage(t, 16, 16)
 	if err := FillPolygon(img, redGC(t), rect); err != nil {
 		t.Fatal(err)

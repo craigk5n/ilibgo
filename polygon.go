@@ -56,8 +56,8 @@ func getIntersectionXValue(line lineType, yval int) int {
 
 func DrawPolygon(image *Image, gc GraphicsContext, points []Point) error {
 	for loop := 1; loop < len(points); loop++ {
-		DrawLine(image, gc, points[loop-1].x, points[loop-1].y,
-			points[loop].x, points[loop].y)
+		DrawLine(image, gc, points[loop-1].X, points[loop-1].Y,
+			points[loop].X, points[loop].Y)
 	}
 
 	return nil
@@ -70,12 +70,12 @@ func FillPolygon(image *Image, gc GraphicsContext, points []Point) error {
 	// create an array of lines
 	var lines []lineType = make([]lineType, 0)
 	for loop := 1; loop < len(points); loop++ {
-		var line lineType = lineType{x1: points[loop-1].x, y1: points[loop-1].y, x2: points[loop].x, y2: points[loop].y}
+		var line lineType = lineType{x1: points[loop-1].X, y1: points[loop-1].Y, x2: points[loop].X, y2: points[loop].Y}
 		setLineSlope(&line)
 		lines = append(lines, line)
 	}
 	// last line connects first and last points
-	var line lineType = lineType{x1: points[0].x, y1: points[0].y, x2: points[len(points)-1].x, y2: points[len(points)-1].y}
+	var line lineType = lineType{x1: points[0].X, y1: points[0].Y, x2: points[len(points)-1].X, y2: points[len(points)-1].Y}
 	setLineSlope(&line)
 	lines = append(lines, line)
 
@@ -88,11 +88,11 @@ func FillPolygon(image *Image, gc GraphicsContext, points []Point) error {
 	*/
 
 	// calculate the min and max y values
-	minY := points[0].y
+	minY := points[0].Y
 	maxY := minY
 	for loop := 1; loop < len(points); loop++ {
-		minY = min(points[loop].y, minY)
-		maxY = max(points[loop].y, maxY)
+		minY = min(points[loop].Y, minY)
+		maxY = max(points[loop].Y, maxY)
 	}
 
 	// now loop through from lowest y to top y

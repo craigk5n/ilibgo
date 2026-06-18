@@ -79,16 +79,16 @@ func IFillArc(image *Image, gc GraphicsContext, x int, y int, r1 int, r2 int, a1
 	da := (a2 - a1) * (2.0 * math.Pi / 360.0) / float64(N-1)
 	for loop := 0; loop < N; loop++ {
 		var p Point
-		p.x = x + int(float64(r1)*math.Cos(a+float64(loop)*da))
-		p.y = y + int(float64(r2)*math.Sin(a+float64(loop)*da))
+		p.X = x + int(float64(r1)*math.Cos(a+float64(loop)*da))
+		p.Y = y + int(float64(r2)*math.Sin(a+float64(loop)*da))
 		points = append(points, p)
 	}
 
 	// if we're not drawing a circle, add in the center point
 	if a2-a1 < 359.9 {
 		var p Point
-		p.x = x
-		p.y = y
+		p.X = x
+		p.Y = y
 		points = append(points, p)
 		FillPolygon(image, gc, points)
 	} else {

@@ -46,7 +46,7 @@ func TestAllocNamedColor(t *testing.T) {
 
 func TestColorsMatch(t *testing.T) {
 	red1, _ := AllocColor(255, 0, 0)
-	red2 := newIColor(255, 0, 0, 128) // same RGB, different alpha
+	red2 := NewColor(255, 0, 0, 128) // same RGB, different alpha
 	blue, _ := AllocColor(0, 0, 255)
 
 	if !colorsMatch(red1, red2) {

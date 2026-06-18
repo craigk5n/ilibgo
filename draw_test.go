@@ -200,7 +200,7 @@ func TestArcsAndCircles(t *testing.T) {
 }
 
 func TestPolygons(t *testing.T) {
-	triangle := []Point{{x: 5, y: 2}, {x: 25, y: 2}, {x: 15, y: 25}}
+	triangle := []Point{{X: 5, Y: 2}, {X: 25, Y: 2}, {X: 15, Y: 25}}
 
 	outline := newWhiteImage(t, 30, 30)
 	if err := DrawPolygon(outline, redGC(t), triangle); err != nil {

@@ -266,23 +266,33 @@ var colorMap = map[string]rgb{
 	"yelloworange":           {255, 174, 66},
 }
 
-func newIColor(red uint8, green uint8, blue uint8, alpha uint8) Color {
+// NewColor constructs a Color from 8-bit red, green, blue and alpha values.
+// Use this when you need control over alpha; AllocColor is the opaque shortcut.
+func NewColor(red uint8, green uint8, blue uint8, alpha uint8) Color {
 	return Color{color: color.RGBA{red, green, blue, alpha}}
+}
+
+// RGBA returns the alpha-premultiplied red, green, blue and alpha values for
+// the color, each in the range [0, 0xffff]. This makes Color satisfy the
+// standard image/color.Color interface so callers can read a Color back and
+// use it with the image and image/draw packages.
+func (c Color) RGBA() (r, g, b, a uint32) {
+	return c.color.RGBA()
 }
 
 // Allocate a color (with no alpha) by its name (e.g. "red", "blue", etc)
 func AllocNamedColor(name string) (Color, error) {
 	if val, ok := colorMap[name]; ok {
-		c := newIColor(uint8(val.red), uint8(val.green), uint8(val.blue), 255)
+		c := NewColor(uint8(val.red), uint8(val.green), uint8(val.blue), 255)
 		return c, nil
 	} else {
-		c := newIColor(255, 255, 255, 255)
+		c := NewColor(255, 255, 255, 255)
 		return c, fmt.Errorf("no such color'%s'", name)
 	}
 }
 
 // Allocate a color (with no alpha) from RGB values 0-255.
 func AllocColor(red, green, blue uint8) (Color, error) {
-	c := newIColor(red, green, blue, 255)
+	c := NewColor(red, green, blue, 255)
 	return c, nil
 }

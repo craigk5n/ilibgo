@@ -6,8 +6,8 @@ import "errors"
 func CreateGraphicsContext() GraphicsContext {
 	var gc GraphicsContext
 
-	gc.foreground = newIColor(0, 0, 0, 255)       // black
-	gc.background = newIColor(255, 255, 255, 255) // white
+	gc.foreground = NewColor(0, 0, 0, 255)       // black
+	gc.background = NewColor(255, 255, 255, 255) // white
 	gc.lineWidth = 1
 	gc.lineStyle = LineSolid
 	gc.textStyle = TextNormal
