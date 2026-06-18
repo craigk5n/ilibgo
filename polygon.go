@@ -11,22 +11,6 @@ type lineType struct {
 	slope          float64
 }
 
-func max(a int, b int) int {
-	if a >= b {
-		return a
-	} else {
-		return b
-	}
-}
-
-func min(a int, b int) int {
-	if a <= b {
-		return a
-	} else {
-		return b
-	}
-}
-
 // Calculate slope.  Keep in mind that our y coordinate is reverse
 // compared to the standard math coordinate system.
 func setLineSlope(line *lineType) {

@@ -1,6 +1,6 @@
 module github.com/craigk5n/ilibgo
 
-go 1.13
+go 1.24
 
 require (
 	github.com/lmittmann/ppm v1.0.0
