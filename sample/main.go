@@ -64,15 +64,15 @@ func main() {
 
 	// draw top shadow rectangle *
 	ilibgo.SetForeground(&gc, topshadow)
-	ilibgo.FillRectangle(img, gc, 0, 0, width, height)
+	img.FillRectangle(gc, 0, 0, width, height)
 
 	// draw bottom shadow rectangle
 	ilibgo.SetForeground(&gc, bottomshadow)
-	ilibgo.FillRectangle(img, gc, 2, 2, width-2, height-2)
+	img.FillRectangle(gc, 2, 2, width-2, height-2)
 
 	// draw background rectangle
 	ilibgo.SetForeground(&gc, background)
-	ilibgo.FillRectangle(img, gc, 2, 2, width-4, height-4)
+	img.FillRectangle(gc, 2, 2, width-4, height-4)
 
 	// Now the fun part: draw some text
 	smallfont, _ := ilibgo.LoadFontFromData("timR12", font.Font_timR12())
@@ -89,31 +89,31 @@ func main() {
 	//y := ((height - textHeight) / 2) + fontHeight
 	y := height / 2
 	ilibgo.SetForeground(&gc, topshadow)
-	ilibgo.FillArc(img, gc, x-2, y-2, 20, arcLen, 90, 270)
-	ilibgo.FillArc(img, gc, width-x-2, y-2, 20, arcLen, -90, 90)
-	ilibgo.FillRectangle(img, gc, x-2, y-arcLen-2, width-2*x, boxHeight)
+	img.FillArc(gc, x-2, y-2, 20, arcLen, 90, 270)
+	img.FillArc(gc, width-x-2, y-2, 20, arcLen, -90, 90)
+	img.FillRectangle(gc, x-2, y-arcLen-2, width-2*x, boxHeight)
 	ilibgo.SetForeground(&gc, bottomshadow)
-	ilibgo.FillArc(img, gc, x+2, y+2, 20, arcLen, 90, 270)
-	ilibgo.FillArc(img, gc, width-x+2, y+2, 20, arcLen, -90, 90)
-	ilibgo.FillRectangle(img, gc, x+2, y-arcLen+2, width-2*x, boxHeight)
+	img.FillArc(gc, x+2, y+2, 20, arcLen, 90, 270)
+	img.FillArc(gc, width-x+2, y+2, 20, arcLen, -90, 90)
+	img.FillRectangle(gc, x+2, y-arcLen+2, width-2*x, boxHeight)
 	ilibgo.SetForeground(&gc, background)
-	ilibgo.FillArc(img, gc, x, y, 20, arcLen, 90, 270)
-	ilibgo.FillArc(img, gc, width-x, y, 20, arcLen, -90, 90)
-	ilibgo.FillRectangle(img, gc, x, y-arcLen, width-2*x+2, boxHeight)
+	img.FillArc(gc, x, y, 20, arcLen, 90, 270)
+	img.FillArc(gc, width-x, y, 20, arcLen, -90, 90)
+	img.FillRectangle(gc, x, y-arcLen, width-2*x+2, boxHeight)
 
 	// draw text
 	ilibgo.SetForeground(&gc, textcolor)
 	ilibgo.SetTextStyle(&gc, ilibgo.TextShadowed)
-	ilibgo.DrawString(img, gc, x, y, text)
+	img.DrawString(gc, x, y, text)
 
 	// draw "SAMPLE" from top to bottom on the left side
 	ilibgo.SetTextStyle(&gc, ilibgo.TextEtchedIn)
 	sampleWidth, _, _ := ilibgo.TextDimensions(gc, largefont, "SAMPLE")
-	ilibgo.DrawStringRotated(img, gc, 8, (height-sampleWidth)/2+1,
+	img.DrawStringRotated(gc, 8, (height-sampleWidth)/2+1,
 		"SAMPLE", ilibgo.TextTopToBottom)
 
 	// draw "SAMPLE" from bottom to top on the right side
-	ilibgo.DrawStringRotated(img, gc,
+	img.DrawStringRotated(gc,
 		width-6, (height+sampleWidth)/2-1,
 		"SAMPLE", ilibgo.TextBottomToTop)
 
@@ -124,7 +124,7 @@ func main() {
 	ilibgo.SetTextStyle(&gc, ilibgo.TextShadowed)
 	ilibgo.SetFont(&gc, smallfont)
 	ilibgo.SetForeground(&gc, textcolor)
-	ilibgo.DrawString(img, gc, x, y, copyright)
+	img.DrawString(gc, x, y, copyright)
 
 	// write output image file
 	fp, err := os.Create(outfile)

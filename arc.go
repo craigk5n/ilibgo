@@ -16,7 +16,7 @@ import (
  ****************************************************************************/
 
 // Draw an arc.  Both arc1 and arc2 are in degrees from 0 to 360.
-func DrawArc(image *Image, gc GraphicsContext, x int, y int, r1 int, r2 int, a1 float64, a2 float64) error {
+func (image *Image) DrawArc(gc GraphicsContext, x int, y int, r1 int, r2 int, a1 float64, a2 float64) error {
 	var myx, myy, lastx, lasty, N, loop int
 
 	/* because our y is upside down, make all angles their negative */
@@ -30,7 +30,7 @@ func DrawArc(image *Image, gc GraphicsContext, x int, y int, r1 int, r2 int, a1 
 		myx = x + int(float64(r1)*math.Cos(a+float64(loop)*da))
 		myy = y + int(float64(r2)*math.Sin(a+float64(loop)*da))
 		if loop > 0 {
-			DrawLine(image, gc, lastx, lasty, myx, myy)
+			image.DrawLine(gc, lastx, lasty, myx, myy)
 		}
 		lastx = myx
 		lasty = myy
@@ -40,7 +40,7 @@ func DrawArc(image *Image, gc GraphicsContext, x int, y int, r1 int, r2 int, a1 
 }
 
 // Draw an arc and connect it to the center point.
-func DrawEnclosedArc(image *Image, gc GraphicsContext, x int, y int, r1 int, r2 int, a1 float64, a2 float64) error {
+func (image *Image) DrawEnclosedArc(gc GraphicsContext, x int, y int, r1 int, r2 int, a1 float64, a2 float64) error {
 	// because our y is upside down, make all angles their negative
 	a1 = 360 - a1
 	a2 = 360 - a2
@@ -54,10 +54,10 @@ func DrawEnclosedArc(image *Image, gc GraphicsContext, x int, y int, r1 int, r2 
 		myx := x + int(float64(r1)*math.Cos(a+float64(loop)*da))
 		myy := y + int(float64(r2)*math.Sin(a+float64(loop)*da))
 		if loop > 0 {
-			DrawLine(image, gc, lastx, lasty, myx, myy)
+			image.DrawLine(gc, lastx, lasty, myx, myy)
 		}
 		if loop == N-1 || loop == 0 {
-			DrawLine(image, gc, x, y, myx, myy)
+			image.DrawLine(gc, x, y, myx, myy)
 		}
 		lastx = myx
 		lasty = myy
@@ -67,7 +67,7 @@ func DrawEnclosedArc(image *Image, gc GraphicsContext, x int, y int, r1 int, r2 
 }
 
 // Fill an arc
-func FillArc(image *Image, gc GraphicsContext, x int, y int, r1 int, r2 int, a1 float64, a2 float64) error {
+func (image *Image) FillArc(gc GraphicsContext, x int, y int, r1 int, r2 int, a1 float64, a2 float64) error {
 	var points []Point = make([]Point, 0)
 
 	// because our y is upside down, make all angles their negative
@@ -90,9 +90,9 @@ func FillArc(image *Image, gc GraphicsContext, x int, y int, r1 int, r2 int, a1 
 		p.X = x
 		p.Y = y
 		points = append(points, p)
-		FillPolygon(image, gc, points)
+		image.FillPolygon(gc, points)
 	} else {
-		FillPolygon(image, gc, points)
+		image.FillPolygon(gc, points)
 	}
 
 	return nil

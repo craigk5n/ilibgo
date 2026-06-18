@@ -58,7 +58,9 @@ myy = y + int(r2*int(math.Sin(a+float64(loop)*da)))
 
 **Strong recommendation: lean on `image`/`color` standard types** where possible rather than wrapping them — interoperates with the entire Go image ecosystem.
 
-### 2.2 Prefer methods over free functions taking `*Image`
+### 2.2 Prefer methods over free functions taking `*Image` — ✅ DONE
+**Implemented.** All drawing operations are now methods on `*Image` (e.g. `img.FillRectangle(gc, …)`; `Copy*` are methods on the destination image). The old free functions remain as `// Deprecated:` forwarders in `deprecated.go`. The `GraphicsContext` stayed a by-value parameter rather than the pointer sketched below. Original note below.
+
 Every primitive is `func DrawX(image *Image, gc GraphicsContext, ...)`. Idiomatic Go would hang these off a type:
 ```go
 func (img *Image) FillRectangle(gc *GraphicsContext, r image.Rectangle) error
