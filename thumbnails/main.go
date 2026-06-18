@@ -1,18 +1,20 @@
 // Build an image that contains an index of a bunch of images.
 //
 // Usage:
-//     thumbnails [-w N] [-h N] [-f] [-s] [-h] outimage inimage1 ...
 //
-//	-w N	sets the icon width, Example: -w120
-//	-H N	sets the icon height, Example: -h120
-//	-f	go ahead and overwrite the output if it already exists
-//	-s	silent
-//	-html f	specify an output file to write an HTML client-side image map
+//	    thumbnails [-w N] [-h N] [-f] [-s] [-h] outimage inimage1 ...
 //
-//	File format types will be determined by their filename
-//	extension (".jpg", ".gif", ".png", etc.)
+//		-w N	sets the icon width, Example: -w120
+//		-H N	sets the icon height, Example: -h120
+//		-f	go ahead and overwrite the output if it already exists
+//		-s	silent
+//		-html f	specify an output file to write an HTML client-side image map
+//
+//		File format types will be determined by their filename
+//		extension (".jpg", ".gif", ".png", etc.)
 //
 // Note:
+//
 //	You can use '-' for the outimage to write to standard output:
 //	  ./thumbnails - file1.jpg file2.jpg file3.jpg > index.png
 //	Note: you can only use PNG for output this way.
@@ -171,7 +173,7 @@ func main() {
 	ts, _ := ilibgo.AllocColor(topShadow, topShadow, topShadow)
 	bs, _ := ilibgo.AllocColor(bottomShandow, bottomShandow, bottomShandow)
 	ilibgo.SetForeground(&gc, bg)
-	ilibgo.FillRectangle(outImage, gc, 0, 0, w, h)
+	outImage.FillRectangle(gc, 0, 0, w, h)
 
 	ilibgo.SetForeground(&gc, black)
 	ilibgo.SetFont(&gc, font)
@@ -215,13 +217,13 @@ func main() {
 			thisH = ilibgo.ImageHeight(img) / scale
 		}
 		ilibgo.SetForeground(&gc, ts)
-		ilibgo.DrawLine(outImage, gc, x-1, y-1, x+iconW+1, y-1)
-		ilibgo.DrawLine(outImage, gc, x-1, y-1, x-1, y+iconH+1)
+		outImage.DrawLine(gc, x-1, y-1, x+iconW+1, y-1)
+		outImage.DrawLine(gc, x-1, y-1, x-1, y+iconH+1)
 		ilibgo.SetForeground(&gc, bs)
-		ilibgo.DrawLine(outImage, gc, x-1, y+iconH+1, x+iconW+1, y+iconH+1)
-		ilibgo.DrawLine(outImage, gc, x+iconW+1, y-1, x+iconW+1, y+iconH+1)
+		outImage.DrawLine(gc, x-1, y+iconH+1, x+iconW+1, y+iconH+1)
+		outImage.DrawLine(gc, x+iconW+1, y-1, x+iconW+1, y+iconH+1)
 		ilibgo.SetForeground(&gc, black)
-		ilibgo.CopyImageScaled(img, outImage,
+		outImage.CopyImageScaled(img,
 			0, 0, ilibgo.ImageWidth(img), ilibgo.ImageHeight(img),
 			x+(iconW-thisW)/2, y+(iconH-thisH)/2, thisW, thisH)
 		/* don't write more text than will fit under the image. */
@@ -232,7 +234,7 @@ func main() {
 			name = filename[0 : l-1]
 			strw, _ = ilibgo.TextWidth(gc, font, name)
 		}
-		ilibgo.DrawString(outImage, gc, x, y+iconH+textspace-2,
+		outImage.DrawString(gc, x, y+iconH+textspace-2,
 			name)
 		if mapFp != nil {
 			fmt.Fprintf(mapFp,

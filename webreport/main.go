@@ -1,31 +1,32 @@
-//  Report generator for apache2 access.log file
+// Report generator for apache2 access.log file
 //
-//  Usage:
-//    webreport [options] [-tod|-dom|-dow|-moy] accesslogfile [accesslogfile ...]
+// Usage:
 //
-//    Default action is to generate a day of the month usage graph to stdout.
+//	webreport [options] [-tod|-dom|-dow|-moy] accesslogfile [accesslogfile ...]
 //
-//    -tod                Display a time of day report indicating what
-//                        hours of the day get the most usage.
-//                        [THIS IS THE DEFAULT]
-//    -dom                Display a day of month report indicating what
-//                        days of the month get the most usage.
-//    -dow                Display a day of week report indicating what
-//                        days of the week get the most usage.
-//    -moy                Displays month report indicating usage by month
+//	Default action is to generate a day of the month usage graph to stdout.
 //
-//    options             what it does
-//    ----------------    ------------------------------------------------
-//    -all                Use all data [default]
-//    -today              Use data from today only
-//    -yesterday          Use data from yesterday only
-//    -lastweek           Use data from the Mon-Sun week prior to this one
-//    -thisweek           Use data for this Mon-Sun week
-//    -thismonth          Use data for the the current month
-//    -lastmonth          Use data for the month prior to this one
-//    -bar                Use a bar graph instead of a line graph.
-//    -line               Use line graph [default]
-//    -nohdr              Do not display title and summary at bottom
+//	-tod                Display a time of day report indicating what
+//	                    hours of the day get the most usage.
+//	                    [THIS IS THE DEFAULT]
+//	-dom                Display a day of month report indicating what
+//	                    days of the month get the most usage.
+//	-dow                Display a day of week report indicating what
+//	                    days of the week get the most usage.
+//	-moy                Displays month report indicating usage by month
+//
+//	options             what it does
+//	----------------    ------------------------------------------------
+//	-all                Use all data [default]
+//	-today              Use data from today only
+//	-yesterday          Use data from yesterday only
+//	-lastweek           Use data from the Mon-Sun week prior to this one
+//	-thisweek           Use data for this Mon-Sun week
+//	-thismonth          Use data for the the current month
+//	-lastmonth          Use data for the month prior to this one
+//	-bar                Use a bar graph instead of a line graph.
+//	-line               Use line graph [default]
+//	-nohdr              Do not display title and summary at bottom
 package main
 
 import (
@@ -394,11 +395,11 @@ func generateOutput(fp *os.File, title string) {
 	blue, _ := ilibgo.AllocNamedColor("navy")
 	gc := ilibgo.CreateGraphicsContext()
 	ilibgo.SetForeground(&gc, grey)
-	ilibgo.FillRectangle(im_out, gc, 0, 0, width, height)
+	im_out.FillRectangle(gc, 0, 0, width, height)
 
 	// draw black border
 	ilibgo.SetForeground(&gc, black)
-	ilibgo.DrawRectangle(im_out, gc, 0, 0, width-1, height-1)
+	im_out.DrawRectangle(gc, 0, 0, width-1, height-1)
 
 	// draw title
 	smallFont, _ := ilibgo.LoadFontFromData("utrg10", font.Font_UTRG__10())
@@ -410,29 +411,29 @@ func generateOutput(fp *os.File, title string) {
 	// TODO: make sure titleW is not larger than TopPad if we allow user to
 	// specify font
 	ilibgo.SetForeground(&gc, grey)
-	ilibgo.DrawString(im_out, gc, (width-titleW)/2+1, titleH+1, title)
+	im_out.DrawString(gc, (width-titleW)/2+1, titleH+1, title)
 	ilibgo.SetForeground(&gc, black)
-	ilibgo.DrawString(im_out, gc, (width-titleW)/2, titleH, title)
+	im_out.DrawString(gc, (width-titleW)/2, titleH, title)
 
 	// write "Retrievals" to the left of the y axis
 	ilibgo.SetFont(&gc, smallFont)
-	ilibgo.DrawString(im_out, gc, 5, TopPad+DataHeight/2-5,
+	im_out.DrawString(gc, 5, TopPad+DataHeight/2-5,
 		yAxisLabel)
 
 	// label the y axis  with the top value
 	temp := abbreviatedNumber(maxval)
 	w, _, _ := ilibgo.TextDimensions(gc, smallFont, temp)
-	ilibgo.DrawString(im_out, gc, LeftPad-3-w, TopPad+3, temp)
+	im_out.DrawString(gc, LeftPad-3-w, TopPad+3, temp)
 	ilibgo.SetForeground(&gc, blue)
-	ilibgo.DrawLine(im_out, gc, LeftPad-3, TopPad, LeftPad, TopPad)
+	im_out.DrawLine(gc, LeftPad-3, TopPad, LeftPad, TopPad)
 
 	// draw x and y axis in blue
-	ilibgo.DrawLine(im_out, gc, LeftPad, TopPad, LeftPad, TopPad+DataHeight)
+	im_out.DrawLine(gc, LeftPad, TopPad, LeftPad, TopPad+DataHeight)
 	if graphType == LineGraph {
-		ilibgo.DrawLine(im_out, gc, LeftPad, TopPad+DataHeight, width-RightPad,
+		im_out.DrawLine(gc, LeftPad, TopPad+DataHeight, width-RightPad,
 			TopPad+DataHeight)
 	} else {
-		ilibgo.DrawLine(im_out, gc, LeftPad, TopPad+DataHeight,
+		im_out.DrawLine(gc, LeftPad, TopPad+DataHeight,
 			width-RightPad+(DataWidth/2),
 			TopPad+DataHeight)
 	}
@@ -442,9 +443,9 @@ func generateOutput(fp *os.File, title string) {
 	for loop := 0; loop <= 4; loop++ {
 		y := TopPad + ((DataHeight / 5) * loop)
 		if graphType == LineGraph {
-			ilibgo.DrawLine(im_out, gc, LeftPad, y, width-RightPad, y)
+			im_out.DrawLine(gc, LeftPad, y, width-RightPad, y)
 		} else {
-			ilibgo.DrawLine(im_out, gc, LeftPad, y,
+			im_out.DrawLine(gc, LeftPad, y,
 				width-RightPad+(DataWidth/2), y)
 		}
 	}
@@ -456,21 +457,21 @@ func generateOutput(fp *os.File, title string) {
 		label := "Day of the Month"
 		axisW, _, _ := ilibgo.TextDimensions(gc, smallFont, label)
 		x := LeftPad + ((width - RightPad - LeftPad) / 2) - (axisW / 2)
-		ilibgo.DrawString(im_out, gc, x, height-35, label)
+		im_out.DrawString(gc, x, height-35, label)
 		// now draw a line for each point
 		lastx := LeftPad + DataWidth
 		lasty := TopPad + int((float64(maxval-dom[0])/float64(maxval))*float64(DataHeight))
 		if graphType == BarGraph {
 			ilibgo.SetForeground(&gc, red)
-			ilibgo.FillRectangle(im_out, gc, lastx-(DataWidth/2)+1, lasty,
+			im_out.FillRectangle(gc, lastx-(DataWidth/2)+1, lasty,
 				DataWidth-2, (TopPad+DataHeight)-lasty)
 		}
 		// draw a tic mark
 		ilibgo.SetForeground(&gc, blue)
-		ilibgo.DrawLine(im_out, gc, lastx, TopPad+DataHeight, lastx,
+		im_out.DrawLine(gc, lastx, TopPad+DataHeight, lastx,
 			TopPad+DataHeight+3)
 		ilibgo.SetForeground(&gc, black)
-		ilibgo.DrawString(im_out, gc, lastx-2, TopPad+DataHeight+11,
+		im_out.DrawString(gc, lastx-2, TopPad+DataHeight+11,
 			"1")
 		for loop := 0; loop < lastDay; loop++ {
 			x := LeftPad + ((loop + 1) * DataWidth)
@@ -479,24 +480,24 @@ func generateOutput(fp *os.File, title string) {
 			ilibgo.SetForeground(&gc, red)
 			if graphType == LineGraph {
 				ilibgo.SetLineWidth(&gc, lineWidth)
-				ilibgo.DrawLine(im_out, gc, lastx, lasty, x, y)
+				im_out.DrawLine(gc, lastx, lasty, x, y)
 				ilibgo.SetLineWidth(&gc, 1)
 			} else {
-				ilibgo.FillRectangle(im_out, gc, x-(DataWidth/2)+1, y,
+				im_out.FillRectangle(gc, x-(DataWidth/2)+1, y,
 					DataWidth-2, (TopPad+DataHeight)-y)
 			}
 			// draw a tic mark
 			ilibgo.SetForeground(&gc, blue)
-			ilibgo.DrawLine(im_out, gc, x, TopPad+DataHeight, x,
+			im_out.DrawLine(gc, x, TopPad+DataHeight, x,
 				TopPad+DataHeight+3)
 			// label the x axis
 			ilibgo.SetForeground(&gc, black)
 			temp := fmt.Sprintf("%d", (loop + 1))
 			if loop < 9 {
-				ilibgo.DrawString(im_out, gc, x-2, TopPad+DataHeight+11,
+				im_out.DrawString(gc, x-2, TopPad+DataHeight+11,
 					temp)
 			} else {
-				ilibgo.DrawString(im_out, gc, x-5, TopPad+DataHeight+11,
+				im_out.DrawString(gc, x-5, TopPad+DataHeight+11,
 					temp)
 			}
 			// save x and y for the next point
@@ -506,22 +507,22 @@ func generateOutput(fp *os.File, title string) {
 	} else if outputType == TimeOfDay {
 		// label this as time of day on x axis
 		ilibgo.SetForeground(&gc, black)
-		ilibgo.DrawString(im_out, gc, LeftPad+80, height-35,
+		im_out.DrawString(gc, LeftPad+80, height-35,
 			"Hour of the Day")
 		// now draw a line for each point
 		lastx := LeftPad + DataWidth
 		lasty := TopPad + int((float64(maxval-tod[0])/float64(maxval))*float64(DataHeight))
 		if graphType == BarGraph {
 			ilibgo.SetForeground(&gc, red)
-			ilibgo.FillRectangle(im_out, gc, lastx-(DataWidth/2)+1, lasty,
+			im_out.FillRectangle(gc, lastx-(DataWidth/2)+1, lasty,
 				DataWidth-2, (TopPad+DataHeight)-lasty)
 		}
 		// draw a tic mark
 		ilibgo.SetForeground(&gc, blue)
-		ilibgo.DrawLine(im_out, gc, lastx, TopPad+DataHeight, lastx,
+		im_out.DrawLine(gc, lastx, TopPad+DataHeight, lastx,
 			TopPad+DataHeight+3)
 		ilibgo.SetForeground(&gc, black)
-		ilibgo.DrawString(im_out, gc, lastx-2, TopPad+DataHeight+11, "1")
+		im_out.DrawString(gc, lastx-2, TopPad+DataHeight+11, "1")
 		for loop := 1; loop < 24; loop++ {
 			x := LeftPad + ((loop + 1) * DataWidth)
 			y := TopPad + int(((float64(maxval-tod[loop]) / float64(maxval)) * float64(DataHeight)))
@@ -529,24 +530,24 @@ func generateOutput(fp *os.File, title string) {
 			ilibgo.SetForeground(&gc, red)
 			if graphType == LineGraph {
 				ilibgo.SetLineWidth(&gc, lineWidth)
-				ilibgo.DrawLine(im_out, gc, lastx, lasty, x, y)
+				im_out.DrawLine(gc, lastx, lasty, x, y)
 				ilibgo.SetLineWidth(&gc, 1)
 			} else {
-				ilibgo.FillRectangle(im_out, gc, x-(DataWidth/2)+1, y,
+				im_out.FillRectangle(gc, x-(DataWidth/2)+1, y,
 					DataWidth-2, (TopPad+DataHeight)-y)
 			}
 			// draw a tic mark
 			ilibgo.SetForeground(&gc, blue)
-			ilibgo.DrawLine(im_out, gc, x, TopPad+DataHeight, x,
+			im_out.DrawLine(gc, x, TopPad+DataHeight, x,
 				TopPad+DataHeight+3)
 			// label the x axis
 			temp := fmt.Sprintf("%d", (loop + 1))
 			ilibgo.SetForeground(&gc, black)
 			if loop < 9 {
-				ilibgo.DrawString(im_out, gc, x-2, TopPad+DataHeight+11,
+				im_out.DrawString(gc, x-2, TopPad+DataHeight+11,
 					temp)
 			} else {
-				ilibgo.DrawString(im_out, gc, x-5, TopPad+DataHeight+11,
+				im_out.DrawString(gc, x-5, TopPad+DataHeight+11,
 					temp)
 			}
 			/* save x and y for the next point */
@@ -556,22 +557,22 @@ func generateOutput(fp *os.File, title string) {
 	} else if outputType == DayOfWeek {
 		// label this as time of day on x axis
 		ilibgo.SetForeground(&gc, black)
-		ilibgo.DrawString(im_out, gc, LeftPad+80, height-35,
+		im_out.DrawString(gc, LeftPad+80, height-35,
 			"Day of Week")
 		// now draw a line for each point
 		lastx := LeftPad + DataWidth*3
 		lasty := TopPad + int((float64(maxval-tod[0])/float64(maxval))*float64(DataHeight))
 		if graphType == BarGraph {
 			ilibgo.SetForeground(&gc, red)
-			ilibgo.FillRectangle(im_out, gc, lastx-(DataWidth/2)+1, lasty,
+			im_out.FillRectangle(gc, lastx-(DataWidth/2)+1, lasty,
 				DataWidth-2, (TopPad+DataHeight)-lasty)
 		}
 		// draw a tic mark
 		ilibgo.SetForeground(&gc, blue)
-		ilibgo.DrawLine(im_out, gc, lastx, TopPad+DataHeight, lastx,
+		im_out.DrawLine(gc, lastx, TopPad+DataHeight, lastx,
 			TopPad+DataHeight+3)
 		ilibgo.SetForeground(&gc, black)
-		ilibgo.DrawString(im_out, gc, lastx-2, TopPad+DataHeight+11,
+		im_out.DrawString(gc, lastx-2, TopPad+DataHeight+11,
 			"Sun")
 		for loop := 1; loop < 7; loop++ {
 			x := LeftPad + ((loop + 1) * DataWidth * 3)
@@ -580,24 +581,24 @@ func generateOutput(fp *os.File, title string) {
 			ilibgo.SetForeground(&gc, red)
 			if graphType == LineGraph {
 				ilibgo.SetLineWidth(&gc, lineWidth)
-				ilibgo.DrawLine(im_out, gc, lastx, lasty, x, y)
+				im_out.DrawLine(gc, lastx, lasty, x, y)
 				ilibgo.SetLineWidth(&gc, 1)
 			} else {
-				ilibgo.FillRectangle(im_out, gc, x-(DataWidth/2)+1, y,
+				im_out.FillRectangle(gc, x-(DataWidth/2)+1, y,
 					DataWidth-2, (TopPad+DataHeight)-y)
 			}
 			// draw a tic mark
 			ilibgo.SetForeground(&gc, blue)
-			ilibgo.DrawLine(im_out, gc, x, TopPad+DataHeight, x,
+			im_out.DrawLine(gc, x, TopPad+DataHeight, x,
 				TopPad+DataHeight+3)
 			// label the x axis
 			temp := wdays[loop]
 			ilibgo.SetForeground(&gc, black)
 			if loop < 9 {
-				ilibgo.DrawString(im_out, gc, x-9, TopPad+DataHeight+11,
+				im_out.DrawString(gc, x-9, TopPad+DataHeight+11,
 					temp)
 			} else {
-				ilibgo.DrawString(im_out, gc, x-12, TopPad+DataHeight+11,
+				im_out.DrawString(gc, x-12, TopPad+DataHeight+11,
 					temp)
 			}
 			// save x and y for the next point
@@ -607,22 +608,22 @@ func generateOutput(fp *os.File, title string) {
 	} else if outputType == MonthOfYear {
 		// label this as time of day on x axis
 		ilibgo.SetForeground(&gc, black)
-		ilibgo.DrawString(im_out, gc, LeftPad+80, height-35,
+		im_out.DrawString(gc, LeftPad+80, height-35,
 			"Month of Year")
 		// now draw a line for each point
 		lastx := LeftPad + DataWidth*2
 		lasty := TopPad + int((float64(maxval-moy[0])/float64(maxval))*float64(DataHeight))
 		if graphType == BarGraph {
 			ilibgo.SetForeground(&gc, red)
-			ilibgo.FillRectangle(im_out, gc, lastx-(DataWidth/2)+1, lasty,
+			im_out.FillRectangle(gc, lastx-(DataWidth/2)+1, lasty,
 				DataWidth-2, (TopPad+DataHeight)-lasty)
 		}
 		// draw a tic mark
 		ilibgo.SetForeground(&gc, blue)
-		ilibgo.DrawLine(im_out, gc, lastx, TopPad+DataHeight, lastx,
+		im_out.DrawLine(gc, lastx, TopPad+DataHeight, lastx,
 			TopPad+DataHeight+3)
 		ilibgo.SetForeground(&gc, black)
-		ilibgo.DrawString(im_out, gc, lastx-2, TopPad+DataHeight+11,
+		im_out.DrawString(gc, lastx-2, TopPad+DataHeight+11,
 			months[0])
 		for loop := 1; loop < 12; loop++ {
 			x := LeftPad + ((loop + 1) * DataWidth * 2)
@@ -631,23 +632,23 @@ func generateOutput(fp *os.File, title string) {
 			ilibgo.SetForeground(&gc, red)
 			if graphType == LineGraph {
 				ilibgo.SetLineWidth(&gc, lineWidth)
-				ilibgo.DrawLine(im_out, gc, lastx, lasty, x, y)
+				im_out.DrawLine(gc, lastx, lasty, x, y)
 				ilibgo.SetLineWidth(&gc, 1)
 			} else {
-				ilibgo.FillRectangle(im_out, gc, x-(DataWidth/2)+1, y,
+				im_out.FillRectangle(gc, x-(DataWidth/2)+1, y,
 					DataWidth-2, (TopPad+DataHeight)-y)
 			}
 			// draw a tic mark
 			ilibgo.SetForeground(&gc, blue)
-			ilibgo.DrawLine(im_out, gc, x, TopPad+DataHeight, x,
+			im_out.DrawLine(gc, x, TopPad+DataHeight, x,
 				TopPad+DataHeight+3)
 			// label the x axis
 			ilibgo.SetForeground(&gc, black)
 			if loop < 9 {
-				ilibgo.DrawString(im_out, gc, x-9, TopPad+DataHeight+11,
+				im_out.DrawString(gc, x-9, TopPad+DataHeight+11,
 					months[loop])
 			} else {
-				ilibgo.DrawString(im_out, gc, x-12, TopPad+DataHeight+11,
+				im_out.DrawString(gc, x-12, TopPad+DataHeight+11,
 					months[loop])
 			}
 			// save x and y for the next point
@@ -659,7 +660,7 @@ func generateOutput(fp *os.File, title string) {
 	if displayHeader {
 		temp := fmt.Sprintf("Total views for interval: %d", total)
 		ilibgo.SetForeground(&gc, black)
-		ilibgo.DrawString(im_out, gc, 5, height-13, temp)
+		im_out.DrawString(gc, 5, height-13, temp)
 
 		if len(prettyStart) > 0 && len(prettyStop) == 0 {
 			temp = fmt.Sprintf("Time range: after %s", prettyStart)
@@ -671,7 +672,7 @@ func generateOutput(fp *os.File, title string) {
 		} else {
 			temp = fmt.Sprintf("Time range: all")
 		}
-		ilibgo.DrawString(im_out, gc, 5, height-23, temp)
+		im_out.DrawString(gc, 5, height-23, temp)
 	}
 
 	// Write output file.
