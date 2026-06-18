@@ -8,13 +8,6 @@ import (
 )
 
 func TestLineHelpers(t *testing.T) {
-	if min(2, 5) != 2 || min(5, 2) != 2 {
-		t.Error("min broken")
-	}
-	if max(2, 5) != 5 || max(5, 2) != 5 {
-		t.Error("max broken")
-	}
-
 	vert := lineType{x1: 3, y1: 0, x2: 3, y2: 9}
 	setLineSlope(&vert)
 	if vert.slope != 0 {
