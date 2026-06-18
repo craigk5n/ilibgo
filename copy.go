@@ -19,7 +19,7 @@ package ilibgo
 // Copy a rectangle portion of a source image to a destination image
 func CopyImage(source *Image, dest *Image, gc GraphicsContext, src_x int, src_y int, width int, height int,
 	dest_x int, dest_y int) error {
-	SetForeground(&gc, newIColor(0, 0, 0, 255))
+	SetForeground(&gc, NewColor(0, 0, 0, 255))
 
 	y := dest_y
 	for row := src_y; row < src_y+height; row++ {

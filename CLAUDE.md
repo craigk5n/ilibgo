@@ -40,7 +40,7 @@ The root directory is the `ilibgo` library package. Each source file holds one c
 
 - **Functional style, not methods.** Almost all operations are package-level functions taking explicit `*Image` and a `GraphicsContext` value, e.g. `ilibgo.FillRectangle(img, gc, x, y, w, h)`. The GC carries foreground/background color, font, line/text style — set it up, then pass it to draw calls. This mirrors the X11 C origin.
 - **Dropped "I" prefix — but inconsistently.** The port dropped the leading `I` from most names (`IAllocColor` → `AllocColor`). Some functions still retain it: `IFillArc`, `IDrawArc`, `IDrawCircle`, `IFillCircle`, `IDrawEllipse`, `IDrawEnclosedArc`. Check the actual name before calling; don't assume the prefix is gone everywhere.
-- **Unexported struct fields.** `Image`, `Color`, `Font`, `Point`, `GraphicsContext` have private fields; manipulate them only through the provided functions (e.g. `ImageWidth(img)`, not `img.width`).
+- **Mostly opaque types.** `Image`, `Font`, and `GraphicsContext` have private fields; manipulate them only through the provided functions (e.g. `ImageWidth(img)`, not `img.width`). Exceptions callers construct directly: `Point` has exported `X, Y` fields (plus the `Pt(x, y)` helper), and `Color` is built with `NewColor(r, g, b, a)` / `AllocColor` / `AllocNamedColor` and read back via its `RGBA()` method (it satisfies `image/color.Color`).
 
 ### Fonts
 

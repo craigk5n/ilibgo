@@ -1,5 +1,10 @@
 package ilibgo
 
+// Pt is a convenience constructor for a Point at (x, y).
+func Pt(x int, y int) Point {
+	return Point{X: x, Y: y}
+}
+
 // Set the point at the specified location using the foreground
 // color of the IGC parameter. (This is an alias to ISetPoint.)
 func DrawPoint(image *Image, gc GraphicsContext, x int, y int) error {

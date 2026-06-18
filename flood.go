@@ -31,35 +31,35 @@ func FloodFill(image *Image, gc GraphicsContext, x int, y int) error {
 		return nil
 	}
 
-	stack := []Point{{x: x, y: y}}
+	stack := []Point{{X: x, Y: y}}
 	for len(stack) > 0 {
 		p := stack[len(stack)-1]
 		stack = stack[:len(stack)-1]
 
 		// Skip pixels already recolored (or never matching) since being queued.
-		if !colorsMatch(GetPoint(image, p.x, p.y), origColor) {
+		if !colorsMatch(GetPoint(image, p.X, p.Y), origColor) {
 			continue
 		}
 
 		/* find left side of this run */
-		fillL := p.x
-		for fillL-1 >= 0 && colorsMatch(GetPoint(image, fillL-1, p.y), origColor) {
+		fillL := p.X
+		for fillL-1 >= 0 && colorsMatch(GetPoint(image, fillL-1, p.Y), origColor) {
 			fillL--
 		}
 		/* find right side of this run */
-		fillR := p.x
-		for fillR+1 < image.width && colorsMatch(GetPoint(image, fillR+1, p.y), origColor) {
+		fillR := p.X
+		for fillR+1 < image.width && colorsMatch(GetPoint(image, fillR+1, p.Y), origColor) {
 			fillR++
 		}
 
 		/* fill the run and queue matching pixels above and below */
 		for i := fillL; i <= fillR; i++ {
-			SetPoint(image, gc, i, p.y)
-			if p.y-1 >= 0 && colorsMatch(GetPoint(image, i, p.y-1), origColor) {
-				stack = append(stack, Point{x: i, y: p.y - 1})
+			SetPoint(image, gc, i, p.Y)
+			if p.Y-1 >= 0 && colorsMatch(GetPoint(image, i, p.Y-1), origColor) {
+				stack = append(stack, Point{X: i, Y: p.Y - 1})
 			}
-			if p.y+1 < image.height && colorsMatch(GetPoint(image, i, p.y+1), origColor) {
-				stack = append(stack, Point{x: i, y: p.y + 1})
+			if p.Y+1 < image.height && colorsMatch(GetPoint(image, i, p.Y+1), origColor) {
+				stack = append(stack, Point{X: i, Y: p.Y + 1})
 			}
 		}
 	}
