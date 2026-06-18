@@ -26,9 +26,16 @@ X11 functions, documented
 Additional BDF Fonts can be found at:
   [https://gitlab.freedesktop.org/xorg/font](https://gitlab.freedesktop.org/xorg/font)
 
-Note that fonts can be loaded as external fonts at run-time, or
-fonts can be embedded in the binary by using the [`bdftogo`](https://github.com/craigk5n/ilibgo/tree/main/bdftogo)
-tool included in this package.
+The fonts bundled with this package are stored as `.bdf` files under `fonts/`
+and compiled into the binary with [`go:embed`](https://pkg.go.dev/embed); each
+foundry package exposes `Font_<name>() []string` accessors backed by the
+embedded data.
+
+Fonts can also be loaded at run-time from an external `.bdf` file with
+`LoadFontFromFile` (or from bytes with `LoadFontFromBytes`). If you prefer to
+bake your own fonts into Go source as `[]string` literals instead of embedding
+`.bdf` files, the [`bdftogo`](https://github.com/craigk5n/ilibgo/tree/main/bdftogo)
+tool included in this package still does that.
 
 
 Note that some of the BDF fonts are bundled with this package.  Please

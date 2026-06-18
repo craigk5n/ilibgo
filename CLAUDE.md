@@ -34,7 +34,7 @@ The root directory is the `ilibgo` library package. Each source file holds one c
 - **`color.go`** — `AllocColor(r,g,b)` and `AllocNamedColor(name)` backed by an embedded X11 `rgb.txt` color map.
 - **Drawing primitives** — `point.go`, `line.go`, `arc.go` (arcs/ellipses), `circle.go`, `rectangle.go`, `polygon.go`, `flood.go`, `copy.go` (`CopyImage`, `CopyImageScaled`).
 - **`text.go`** — text rendering: `DrawString`, `DrawStringRotated` (left-to-right / top-to-bottom / bottom-to-top), `DrawStringRotatedAngle`, and `TextDimensions`/`TextWidth`/`TextHeight`. Implements the `TextStyle` effects (etched/shadowed).
-- **`fontbdf.go`** — BDF font parser. `LoadFontFromFile(path, name)` reads a `.bdf` file; `LoadFontFromData(name, lines)` parses already-loaded lines (used by embedded fonts). ASCII chars are indexed into a `[256]BdfChar` array; non-ASCII go into `otherChars`.
+- **`fontbdf.go`** — BDF font parser. `LoadFontFromFile(path, name)` reads a `.bdf` file; `LoadFontFromBytes(name, data)` parses raw bytes (used by the embedded fonts); `LoadFontFromData(name, lines)` parses already-split lines (the shared core). ASCII chars are indexed into a `[256]BdfChar` array; non-ASCII go into `otherChars`.
 
 ### Key API conventions
 
@@ -45,7 +45,7 @@ The root directory is the `ilibgo` library package. Each source file holds one c
 
 ### Fonts
 
-`fonts/` contains BDF fonts pre-converted to Go source via `bdftogo`, grouped by foundry (`adobe_100dpi`, `adobe_utopia_100dpi`, `bh_lucidatypewriter_100dpi`). Each font is exposed as a function returning `[]string` (e.g. `font.Font_helvR24()`), passed to `LoadFontFromData`. Fonts can either be embedded this way or loaded at runtime from a `.bdf` file with `LoadFontFromFile`. The `bdftogo` tool regenerates these embeddable files from raw `.bdf` sources.
+`fonts/` holds the bundled BDF fonts as canonical `.bdf` files, grouped by foundry (`adobe_100dpi`, `adobe_utopia_100dpi`, `bh_lucidatypewriter_100dpi`). Each foundry is its own Go package: an `embed.go` embeds that directory's `*.bdf` via `//go:embed` and exposes a private `lines()` helper, and one small wrapper file per font keeps the existing accessor API — `font.Font_helvR24()` still returns `[]string`, now read from the embedded file. Pass that to `LoadFontFromData`, or load any `.bdf` at runtime with `LoadFontFromFile` / from bytes with `LoadFontFromBytes`. The `bdftogo` tool remains available for users who prefer to bake their own fonts into Go `[]string` source, but it is no longer part of this repo's build.
 
 ## Notes
 
