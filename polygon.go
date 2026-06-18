@@ -1,7 +1,5 @@
 package ilibgo
 
-import "fmt"
-
 // History:
 // 08-Jul-2022	Craig Knudsen craig@k5n.us
 //            	Converted from C to Go
@@ -149,13 +147,10 @@ func FillPolygon(image *Image, gc GraphicsContext, points []Point) error {
 			}
 		}
 
-		if found >= 2 {
+		if found >= 1 {
+			// Spans both the multi-intersection case and a single
+			// intersection (point or horizontal edge at this row).
 			DrawLine(image, gc, left, yloop, right, yloop)
-		} else if found == 1 && left == right {
-			DrawLine(image, gc, left, yloop, right, yloop)
-		} else if found == 1 && left != right {
-			/* Eek.  This really shouldn't happen */
-			return fmt.Errorf("ilib bug no. 34534345")
 		}
 	}
 

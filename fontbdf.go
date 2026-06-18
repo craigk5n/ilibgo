@@ -121,7 +121,6 @@ func LoadFontFromData(name string, lines []string) (*Font, error) {
 
 	var char BdfChar
 	inBitmap := false
-	var temp int
 	xPos := 0
 	yPos := 0
 	for lineNo, line := range lines {
@@ -140,12 +139,6 @@ func LoadFontFromData(name string, lines []string) (*Font, error) {
 				char.name = fmt.Sprintf("%c", int1)
 			} else if err == nil && int1 > 0 {
 				char.name = fmt.Sprintf("%c", int1)
-			}
-		} else if strings.HasPrefix(line, "PIXEL_SIZE") {
-			temp := line[11:]
-			int1, err := strconv.ParseInt(temp, 10, 32)
-			if err == nil {
-				font.pixelSize = int(int1)
 			}
 		} else if strings.HasPrefix(line, "PIXEL_SIZE") {
 			temp := line[11:]
@@ -174,12 +167,13 @@ func LoadFontFromData(name string, lines []string) (*Font, error) {
 		} else if strings.HasPrefix(line, "WEIGHT_NAME") { // "Medium"
 			font.weight = trimQuotes(line[12:])
 		} else if strings.HasPrefix(line, "SLANT") { // "R", "I"
-			font.weight = trimQuotes(line[6:])
+			font.slant = trimQuotes(line[6:])
 		} else if strings.HasPrefix(line, "BBX") {
 			fmt.Sscanf(line, "BBX %d %d %d %d", &char.width, &char.height, &char.xoffset, &char.yoffset)
 			char.data = make([]bool, char.width*char.height)
 		} else if strings.HasPrefix(line, "DWIDTH") {
-			fmt.Sscanf(line, "DWIDTH %d %d", &char.actualWidth, &char.height, &char.xoffset, &temp)
+			// BDF DWIDTH is "dwx0 dwy0"; we only use the horizontal advance.
+			fmt.Sscanf(line, "DWIDTH %d", &char.actualWidth)
 		} else if strings.HasPrefix(line, "BITMAP") {
 			inBitmap = true
 			xPos = 0

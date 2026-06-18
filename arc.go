@@ -51,8 +51,8 @@ func IDrawEnclosedArc(image *Image, gc GraphicsContext, x int, y int, r1 int, r2
 	lastx := 0
 	lasty := 0
 	for loop := 0; loop < N; loop++ {
-		myx := x + int(r1*int(math.Cos(a+float64(loop)*da)))
-		myy := y + int(r2*int(math.Sin(a+float64(loop)*da)))
+		myx := x + int(float64(r1)*math.Cos(a+float64(loop)*da))
+		myy := y + int(float64(r2)*math.Sin(a+float64(loop)*da))
 		if loop > 0 {
 			DrawLine(image, gc, lastx, lasty, myx, myy)
 		}
