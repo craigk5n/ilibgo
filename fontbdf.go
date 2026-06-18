@@ -135,9 +135,7 @@ func LoadFontFromData(name string, lines []string) (*Font, error) {
 		} else if strings.HasPrefix(line, "ENCODING") {
 			temp := trimQuotes(line[9:])
 			int1, err := strconv.ParseInt(temp, 10, 32)
-			if err == nil && int1 > 0 && int1 < 256 {
-				char.name = fmt.Sprintf("%c", int1)
-			} else if err == nil && int1 > 0 {
+			if err == nil && int1 > 0 {
 				char.name = fmt.Sprintf("%c", int1)
 			}
 		} else if strings.HasPrefix(line, "PIXEL_SIZE") {
@@ -153,7 +151,9 @@ func LoadFontFromData(name string, lines []string) (*Font, error) {
 				font.fontAscent = int(int1)
 			}
 		} else if strings.HasPrefix(line, "FONT_DESCENT") {
-			temp := line[12:]
+			// "FONT_DESCENT" is one char longer than "FONT_ASCENT", so the
+			// fixed offset leaves a leading space; trim it before parsing.
+			temp := strings.TrimSpace(line[12:])
 			int1, err := strconv.ParseInt(temp, 10, 32)
 			if err == nil {
 				font.fontDescent = int(int1)
@@ -181,8 +181,13 @@ func LoadFontFromData(name string, lines []string) (*Font, error) {
 		} else if line == "ENDCHAR" {
 			if inBitmap {
 				inBitmap = false
-				if len(char.name) == 1 {
-					r := []rune(char.name)
+				// Route by rune value: single-rune names with a code in the
+				// [0,255] range (ASCII and Latin-1) index the fixed array;
+				// everything else (multi-rune names, codes >= 256) goes to
+				// otherChars. The < 256 guard also prevents an out-of-range
+				// index into the [256]BdfChar array.
+				r := []rune(char.name)
+				if len(r) == 1 && r[0] < 256 {
 					font.chars[r[0]] = char
 				} else {
 					font.otherChars = append(font.otherChars, char)
