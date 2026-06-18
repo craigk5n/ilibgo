@@ -21,10 +21,10 @@ import (
 //	20-May-1996	Craig Knudsen	cknudsen@cknudsen.com
 //			Created
 
-// Copy a rectangle portion of a source image to a destination image.
-// The gc parameter is retained for API compatibility but is unused; the copy
-// is a straight pixel transfer clipped to both images' bounds.
-func CopyImage(source *Image, dest *Image, gc GraphicsContext, src_x int, src_y int, width int, height int,
+// CopyImage copies a rectangular region of source onto this (destination)
+// image. The gc parameter is retained for API compatibility but is unused; the
+// copy is a straight pixel transfer clipped to both images' bounds.
+func (dest *Image) CopyImage(source *Image, gc GraphicsContext, src_x int, src_y int, width int, height int,
 	dest_x int, dest_y int) error {
 	dstRect := image.Rect(dest_x, dest_y, dest_x+width, dest_y+height)
 	srcPoint := image.Point{X: src_x, Y: src_y}
@@ -32,9 +32,9 @@ func CopyImage(source *Image, dest *Image, gc GraphicsContext, src_x int, src_y 
 	return nil
 }
 
-// This allows the user to scale up or down the source image onto
-// the destination image.
-func CopyImageScaled(source *Image, dest *Image,
+// CopyImageScaled scales a region of source onto this (destination) image
+// using nearest-neighbor sampling.
+func (dest *Image) CopyImageScaled(source *Image,
 	src_x int, src_y int, src_width int, src_height int,
 	dest_x int, dest_y int, dest_width int, dest_height int) error {
 
@@ -52,8 +52,8 @@ func CopyImageScaled(source *Image, dest *Image,
 			x2 := int(tempx)
 			tempy := float64(src_y) + float64(y-dest_y)/scaley
 			y2 := int(tempy)
-			gc.foreground = GetPoint(source, x2, y2)
-			SetPoint(dest, gc, x, y)
+			gc.foreground = source.GetPoint(x2, y2)
+			dest.SetPoint(gc, x, y)
 		}
 	}
 	return nil

@@ -12,7 +12,7 @@ import (
 
 const onOffPixels float64 = 3.0
 
-func DrawLine(image *Image, gc GraphicsContext, x1 int, y1 int, x2 int, y2 int) error {
+func (image *Image) DrawLine(gc GraphicsContext, x1 int, y1 int, x2 int, y2 int) error {
 	var myx, myy int
 	var slope, myslope, curx, cury float64
 	done := false
@@ -112,20 +112,20 @@ func DrawLine(image *Image, gc GraphicsContext, x1 int, y1 int, x2 int, y2 int) 
 			switch gc.lineWidth {
 			default:
 			case 0:
-				DrawPoint(image, gc, myx, myy)
+				image.DrawPoint(gc, myx, myy)
 			case 1:
-				DrawPoint(image, gc, myx, myy)
+				image.DrawPoint(gc, myx, myy)
 			case 2:
-				DrawPoint(image, gc, myx, myy)
-				DrawPoint(image, gc, myx-1, myy)
-				DrawPoint(image, gc, myx-1, myy-1)
-				DrawPoint(image, gc, myx, myy-1)
+				image.DrawPoint(gc, myx, myy)
+				image.DrawPoint(gc, myx-1, myy)
+				image.DrawPoint(gc, myx-1, myy-1)
+				image.DrawPoint(gc, myx, myy-1)
 			case 3:
-				DrawPoint(image, gc, myx, myy)
-				DrawPoint(image, gc, myx-1, myy)
-				DrawPoint(image, gc, myx+1, myy-1)
-				DrawPoint(image, gc, myx, myy-1)
-				DrawPoint(image, gc, myx, myy+1)
+				image.DrawPoint(gc, myx, myy)
+				image.DrawPoint(gc, myx-1, myy)
+				image.DrawPoint(gc, myx+1, myy-1)
+				image.DrawPoint(gc, myx, myy-1)
+				image.DrawPoint(gc, myx, myy+1)
 			}
 		}
 	}

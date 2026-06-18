@@ -54,9 +54,9 @@ func getIntersectionXValue(line lineType, yval int) int {
 	}
 }
 
-func DrawPolygon(image *Image, gc GraphicsContext, points []Point) error {
+func (image *Image) DrawPolygon(gc GraphicsContext, points []Point) error {
 	for loop := 1; loop < len(points); loop++ {
-		DrawLine(image, gc, points[loop-1].X, points[loop-1].Y,
+		image.DrawLine(gc, points[loop-1].X, points[loop-1].Y,
 			points[loop].X, points[loop].Y)
 	}
 
@@ -64,7 +64,7 @@ func DrawPolygon(image *Image, gc GraphicsContext, points []Point) error {
 }
 
 // Fill a polygonn
-func FillPolygon(image *Image, gc GraphicsContext, points []Point) error {
+func (image *Image) FillPolygon(gc GraphicsContext, points []Point) error {
 	gc.lineWidth = 1
 
 	// create an array of lines
@@ -134,7 +134,7 @@ func FillPolygon(image *Image, gc GraphicsContext, points []Point) error {
 		if found >= 1 {
 			// Spans both the multi-intersection case and a single
 			// intersection (point or horizontal edge at this row).
-			DrawLine(image, gc, left, yloop, right, yloop)
+			image.DrawLine(gc, left, yloop, right, yloop)
 		}
 	}
 

@@ -83,8 +83,8 @@ func TextDimensions(gc GraphicsContext, font *Font, text string) (width int, hei
 	return retWidth, retHeight, nil
 }
 
-func DrawString(image *Image, gc GraphicsContext, x int, y int, text string) {
-	DrawStringRotated(image, gc, x, y, text, TextLeftToRight)
+func (image *Image) DrawString(gc GraphicsContext, x int, y int, text string) {
+	image.DrawStringRotated(gc, x, y, text, TextLeftToRight)
 }
 
 // calculate values for topshadow and bottomshadow
@@ -145,7 +145,7 @@ func makeShadows(incolor Color, numShadows int) []Color {
 	return ret
 }
 
-func DrawStringRotated(image *Image, gc GraphicsContext, x int, y int, text string, direction TextDirection) {
+func (image *Image) DrawStringRotated(gc GraphicsContext, x int, y int, text string, direction TextDirection) {
 	var top, bottom Color
 	var fontHeight int
 
@@ -232,7 +232,7 @@ func drawStringRotated90(image *Image, gc GraphicsContext, x int, y int, text st
 					for loop4 := 0; loop4 < bdfChar.width; loop4++ {
 						if bdfChar.data[loop3*bdfChar.width+loop4] {
 							myx := charx + bdfChar.xoffset + loop4
-							SetPoint(image, gc, myx, myy)
+							image.SetPoint(gc, myx, myy)
 						}
 					}
 				case TextTopToBottom:
@@ -240,7 +240,7 @@ func drawStringRotated90(image *Image, gc GraphicsContext, x int, y int, text st
 					for loop4 := 0; loop4 < bdfChar.width; loop4++ {
 						if bdfChar.data[loop3*bdfChar.width+loop4] {
 							myy := chary + bdfChar.xoffset + loop4
-							SetPoint(image, gc, myx, myy)
+							image.SetPoint(gc, myx, myy)
 						}
 					}
 				case TextBottomToTop:
@@ -248,7 +248,7 @@ func drawStringRotated90(image *Image, gc GraphicsContext, x int, y int, text st
 					for loop4 := 0; loop4 < bdfChar.width; loop4++ {
 						if bdfChar.data[loop3*bdfChar.width+loop4] {
 							myy := chary - bdfChar.xoffset - loop4
-							SetPoint(image, gc, myx, myy)
+							image.SetPoint(gc, myx, myy)
 						}
 					}
 				}
@@ -266,7 +266,7 @@ func drawStringRotated90(image *Image, gc GraphicsContext, x int, y int, text st
 	}
 }
 
-func DrawStringRotatedAngle(image *Image, gc GraphicsContext, x int, y int, text string, angle float64) {
+func (image *Image) DrawStringRotatedAngle(gc GraphicsContext, x int, y int, text string, angle float64) {
 	var bdfChar *BdfChar
 	var myx, myy int
 	charNum := 0
@@ -309,7 +309,7 @@ func DrawStringRotatedAngle(image *Image, gc GraphicsContext, x int, y int, text
 							y1*math.Cos(angle*math.Pi/180.0)
 						myy = chary - (gc.font.font.pixelSize + bdfChar.yoffset) + int(y2)
 						myx = charx + int(x2)
-						SetPoint(image, gc, myx, myy)
+						image.SetPoint(gc, myx, myy)
 					}
 				}
 			}
