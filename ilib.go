@@ -164,7 +164,9 @@ func WriteImageFile(f *os.File, img *Image, format ImageFormat) error {
 	case FormatBMP:
 		err = bmp.Encode(f, img.data)
 	case FormatTIFF:
-		var tiffOptions tiff.Options = tiff.Options{Compression: tiff.LZW}
+		// x/image/tiff's encoder only supports Uncompressed and Deflate;
+		// LZW is decode-only and returns "unsupported compression".
+		var tiffOptions tiff.Options = tiff.Options{Compression: tiff.Deflate}
 		err = tiff.Encode(f, img.data, &tiffOptions)
 	case FormatPPM:
 		err = ppm.Encode(f, img.data)
