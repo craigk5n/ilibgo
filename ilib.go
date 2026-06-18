@@ -139,14 +139,7 @@ func CreateImage(width int, height int) *Image {
 
 func CreateImageWithBackground(width int, height int, background Color) *Image {
 	ret := CreateImage(width, height)
-	// TODO: Use IFillRect
-	gc := CreateGraphicsContext()
-	gc.foreground = background
-	for x := 0; x < width; x++ {
-		for y := 0; y < height; y++ {
-			SetPoint(ret, gc, x, y)
-		}
-	}
+	draw.Draw(ret.data, ret.data.Bounds(), &image.Uniform{C: background.color}, image.Point{}, draw.Src)
 	return ret
 }
 

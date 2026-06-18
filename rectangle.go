@@ -1,5 +1,10 @@
 package ilibgo
 
+import (
+	"image"
+	"image/draw"
+)
+
 // Draw a rectangle
 func DrawRectangle(image *Image, gc GraphicsContext, x int, y int, width int, height int) error {
 	DrawLine(image, gc, x, y, x+width, y)
@@ -10,15 +15,10 @@ func DrawRectangle(image *Image, gc GraphicsContext, x int, y int, width int, he
 	return nil
 }
 
-// Draw a filled rectangle
-func FillRectangle(image *Image, gc GraphicsContext, x int, y int, width int, height int) error {
-	for row := y; row < y+height && row < image.height; row++ {
-		for col := x; col < x+width && col < image.width; col++ {
-			if row >= 0 && col >= 0 {
-				SetPoint(image, gc, col, row)
-			}
-		}
-	}
-
+// Draw a filled rectangle. The rectangle is clipped to the image bounds, so
+// off-image or negative coordinates are handled safely.
+func FillRectangle(img *Image, gc GraphicsContext, x int, y int, width int, height int) error {
+	r := image.Rect(x, y, x+width, y+height)
+	draw.Draw(img.data, r, &image.Uniform{C: gc.foreground.color}, image.Point{}, draw.Src)
 	return nil
 }

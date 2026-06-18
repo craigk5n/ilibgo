@@ -1,5 +1,10 @@
 package ilibgo
 
+import (
+	"image"
+	"image/draw"
+)
+
 // Description:
 //	Copy an area of an image to another image.
 //
@@ -16,22 +21,14 @@ package ilibgo
 //	20-May-1996	Craig Knudsen	cknudsen@cknudsen.com
 //			Created
 
-// Copy a rectangle portion of a source image to a destination image
+// Copy a rectangle portion of a source image to a destination image.
+// The gc parameter is retained for API compatibility but is unused; the copy
+// is a straight pixel transfer clipped to both images' bounds.
 func CopyImage(source *Image, dest *Image, gc GraphicsContext, src_x int, src_y int, width int, height int,
 	dest_x int, dest_y int) error {
-	SetForeground(&gc, NewColor(0, 0, 0, 255))
-
-	y := dest_y
-	for row := src_y; row < src_y+height; row++ {
-		x := dest_x
-		for col := src_x; col < src_x+width; col++ {
-			c := GetPoint(source, col, row)
-			SetForeground(&gc, c)
-			SetPoint(dest, gc, x, y)
-			x++
-		}
-		y++
-	}
+	dstRect := image.Rect(dest_x, dest_y, dest_x+width, dest_y+height)
+	srcPoint := image.Point{X: src_x, Y: src_y}
+	draw.Draw(dest.data, dstRect, source.data, srcPoint, draw.Src)
 	return nil
 }
 
