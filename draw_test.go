@@ -142,11 +142,11 @@ func TestDrawRectangle(t *testing.T) {
 func TestArcsAndCircles(t *testing.T) {
 	t.Run("DrawCircle", func(t *testing.T) {
 		img := newWhiteImage(t, 40, 40)
-		if err := IDrawCircle(img, redGC(t), 20, 20, 10); err != nil {
+		if err := DrawCircle(img, redGC(t), 20, 20, 10); err != nil {
 			t.Fatal(err)
 		}
 		if countSet(img) == 0 {
-			t.Error("IDrawCircle drew nothing")
+			t.Error("DrawCircle drew nothing")
 		}
 		if !isWhite(img, 20, 20) {
 			t.Error("outline circle should not fill its center")
@@ -154,7 +154,7 @@ func TestArcsAndCircles(t *testing.T) {
 	})
 	t.Run("FillCircle", func(t *testing.T) {
 		img := newWhiteImage(t, 40, 40)
-		if err := IFillCircle(img, redGC(t), 20, 20, 10); err != nil {
+		if err := FillCircle(img, redGC(t), 20, 20, 10); err != nil {
 			t.Fatal(err)
 		}
 		if !isSet(img, 20, 20) {
@@ -163,40 +163,67 @@ func TestArcsAndCircles(t *testing.T) {
 	})
 	t.Run("DrawArc", func(t *testing.T) {
 		img := newWhiteImage(t, 40, 40)
-		if err := IDrawArc(img, redGC(t), 20, 20, 10, 10, 0, 90); err != nil {
+		if err := DrawArc(img, redGC(t), 20, 20, 10, 10, 0, 90); err != nil {
 			t.Fatal(err)
 		}
 		if countSet(img) == 0 {
-			t.Error("IDrawArc drew nothing")
+			t.Error("DrawArc drew nothing")
 		}
 	})
 	t.Run("FillArc", func(t *testing.T) {
 		img := newWhiteImage(t, 40, 40)
-		if err := IFillArc(img, redGC(t), 20, 20, 15, 15, 0, 180); err != nil {
+		if err := FillArc(img, redGC(t), 20, 20, 15, 15, 0, 180); err != nil {
 			t.Fatal(err)
 		}
 		if countSet(img) == 0 {
-			t.Error("IFillArc drew nothing")
+			t.Error("FillArc drew nothing")
 		}
 	})
 	t.Run("EnclosedArc", func(t *testing.T) {
 		img := newWhiteImage(t, 60, 60)
-		if err := IDrawEnclosedArc(img, redGC(t), 30, 30, 20, 20, 0, 90); err != nil {
+		if err := DrawEnclosedArc(img, redGC(t), 30, 30, 20, 20, 0, 90); err != nil {
 			t.Fatal(err)
 		}
 		if countSet(img) == 0 {
-			t.Error("IDrawEnclosedArc drew nothing")
+			t.Error("DrawEnclosedArc drew nothing")
 		}
 	})
 	t.Run("Ellipse", func(t *testing.T) {
 		img := newWhiteImage(t, 60, 40)
-		if err := IDrawEllipse(img, redGC(t), 30, 20, 20, 10); err != nil {
+		if err := DrawEllipse(img, redGC(t), 30, 20, 20, 10); err != nil {
 			t.Fatal(err)
 		}
 		if countSet(img) == 0 {
-			t.Error("IDrawEllipse drew nothing")
+			t.Error("DrawEllipse drew nothing")
 		}
 	})
+}
+
+// TestDeprecatedArcAliases confirms the legacy I-prefixed names still forward
+// to the renamed functions.
+func TestDeprecatedArcAliases(t *testing.T) {
+	checks := []struct {
+		name string
+		draw func(*Image, GraphicsContext) error
+	}{
+		{"IDrawArc", func(img *Image, gc GraphicsContext) error { return IDrawArc(img, gc, 20, 20, 10, 10, 0, 90) }},
+		{"IFillArc", func(img *Image, gc GraphicsContext) error { return IFillArc(img, gc, 20, 20, 15, 15, 0, 180) }},
+		{"IDrawEnclosedArc", func(img *Image, gc GraphicsContext) error { return IDrawEnclosedArc(img, gc, 20, 20, 10, 10, 0, 90) }},
+		{"IDrawCircle", func(img *Image, gc GraphicsContext) error { return IDrawCircle(img, gc, 20, 20, 10) }},
+		{"IFillCircle", func(img *Image, gc GraphicsContext) error { return IFillCircle(img, gc, 20, 20, 10) }},
+		{"IDrawEllipse", func(img *Image, gc GraphicsContext) error { return IDrawEllipse(img, gc, 20, 20, 15, 8) }},
+	}
+	for _, c := range checks {
+		t.Run(c.name, func(t *testing.T) {
+			img := newWhiteImage(t, 40, 40)
+			if err := c.draw(img, redGC(t)); err != nil {
+				t.Fatalf("%s: %v", c.name, err)
+			}
+			if countSet(img) == 0 {
+				t.Errorf("%s alias drew nothing", c.name)
+			}
+		})
+	}
 }
 
 func TestPolygons(t *testing.T) {

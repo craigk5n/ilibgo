@@ -1,6 +1,7 @@
 // Sample app for ilibgo package.  This app shows how to
 // load and use a BDF font, draw lines, draw arcs, draw rectangles, etc.
 // Usage:
+//
 //	sample [-width N] [-height N] [-text inputtext] [-out file]
 package main
 
@@ -12,7 +13,6 @@ import (
 	ilibgo "github.com/craigk5n/ilibgo"
 	font "github.com/craigk5n/ilibgo/fonts/adobe_100dpi"
 )
-
 
 const DefaultFontName string = "helvR24"
 const DefaultFontName2 string = "helvR08"
@@ -89,16 +89,16 @@ func main() {
 	//y := ((height - textHeight) / 2) + fontHeight
 	y := height / 2
 	ilibgo.SetForeground(&gc, topshadow)
-	ilibgo.IFillArc(img, gc, x-2, y-2, 20, arcLen, 90, 270)
-	ilibgo.IFillArc(img, gc, width-x-2, y-2, 20, arcLen, -90, 90)
+	ilibgo.FillArc(img, gc, x-2, y-2, 20, arcLen, 90, 270)
+	ilibgo.FillArc(img, gc, width-x-2, y-2, 20, arcLen, -90, 90)
 	ilibgo.FillRectangle(img, gc, x-2, y-arcLen-2, width-2*x, boxHeight)
 	ilibgo.SetForeground(&gc, bottomshadow)
-	ilibgo.IFillArc(img, gc, x+2, y+2, 20, arcLen, 90, 270)
-	ilibgo.IFillArc(img, gc, width-x+2, y+2, 20, arcLen, -90, 90)
+	ilibgo.FillArc(img, gc, x+2, y+2, 20, arcLen, 90, 270)
+	ilibgo.FillArc(img, gc, width-x+2, y+2, 20, arcLen, -90, 90)
 	ilibgo.FillRectangle(img, gc, x+2, y-arcLen+2, width-2*x, boxHeight)
 	ilibgo.SetForeground(&gc, background)
-	ilibgo.IFillArc(img, gc, x, y, 20, arcLen, 90, 270)
-	ilibgo.IFillArc(img, gc, width-x, y, 20, arcLen, -90, 90)
+	ilibgo.FillArc(img, gc, x, y, 20, arcLen, 90, 270)
+	ilibgo.FillArc(img, gc, width-x, y, 20, arcLen, -90, 90)
 	ilibgo.FillRectangle(img, gc, x, y-arcLen, width-2*x+2, boxHeight)
 
 	// draw text

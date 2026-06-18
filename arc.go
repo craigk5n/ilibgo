@@ -16,7 +16,7 @@ import (
  ****************************************************************************/
 
 // Draw an arc.  Both arc1 and arc2 are in degrees from 0 to 360.
-func IDrawArc(image *Image, gc GraphicsContext, x int, y int, r1 int, r2 int, a1 float64, a2 float64) error {
+func DrawArc(image *Image, gc GraphicsContext, x int, y int, r1 int, r2 int, a1 float64, a2 float64) error {
 	var myx, myy, lastx, lasty, N, loop int
 
 	/* because our y is upside down, make all angles their negative */
@@ -40,7 +40,7 @@ func IDrawArc(image *Image, gc GraphicsContext, x int, y int, r1 int, r2 int, a1
 }
 
 // Draw an arc and connect it to the center point.
-func IDrawEnclosedArc(image *Image, gc GraphicsContext, x int, y int, r1 int, r2 int, a1 float64, a2 float64) error {
+func DrawEnclosedArc(image *Image, gc GraphicsContext, x int, y int, r1 int, r2 int, a1 float64, a2 float64) error {
 	// because our y is upside down, make all angles their negative
 	a1 = 360 - a1
 	a2 = 360 - a2
@@ -67,7 +67,7 @@ func IDrawEnclosedArc(image *Image, gc GraphicsContext, x int, y int, r1 int, r2
 }
 
 // Fill an arc
-func IFillArc(image *Image, gc GraphicsContext, x int, y int, r1 int, r2 int, a1 float64, a2 float64) error {
+func FillArc(image *Image, gc GraphicsContext, x int, y int, r1 int, r2 int, a1 float64, a2 float64) error {
 	var points []Point = make([]Point, 0)
 
 	// because our y is upside down, make all angles their negative
