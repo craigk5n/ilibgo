@@ -185,6 +185,46 @@ The parser uses fixed substring offsets (`line[10:]`, `line[12:]`, etc.) and ass
 
 ---
 
+## 8. Example apps & utilities (ideas)
+
+Small programs that showcase the library and/or are useful on their own. Each is a `package main` under its own directory, like the existing tools.
+
+**Done:**
+- **`iconvert`** ✅ — format converter (`iconvert in.png out.tiff`), thin wrapper over `ReadImageFile`/`FileType`/`WriteImageFile`.
+- **`chart`** ✅ — bar-chart generator from `label=value` args or `label,value` stdin; a general successor to the hardcoded `webreport` grapher.
+
+**Examples (showcase value):**
+- **`captcha`** — distorted-text CAPTCHA: per-char `DrawStringRotatedAngle`, noise via `DrawLine`/`SetPoint`. Exercises rotation + alpha.
+- **`sparkline`** — tiny inline trend image from a number list; minimal "hello world" for the draw API.
+- **`watermark`** — overlay semi-transparent text/logo onto a loaded image; demonstrates the alpha `NewColor` + image round-trip.
+- **`fontsheet`** — render a full glyph specimen sheet for a bundled font by iterating the embedded `fonts.FS`; doubles as visual font QA.
+- **`mandelbrot`/fractal** — per-pixel `SetPoint`/`NewColor`; also a natural benchmark target.
+- **`montage`** — compose N images into a labeled grid (a configurable generalization of `thumbnails`).
+- **`iresize`** — scale an image via `CopyImageScaled` (good demo target for §5.3 quality scaling).
+- **`barcode`** — Code 39 / simple grid barcode with `FillRectangle`; pure geometry, no font.
+
+**Utilities / infra:**
+- **`bdfinfo`** — print a `.bdf`'s foundry/family/slant/ascent/descent/glyph-count; gives the parser a non-rendering consumer and exercises the metadata fields.
+- **Golden-image CI check** — render a known scene, diff against a committed PNG hash to catch visual regressions.
+- **Benchmarks** (`go test -bench`) — fills, `CopyImageScaled`, flood fill, fractal; anchor the perf claims from the `draw.Draw` work.
+
+## 9. Scalable / TrueType font support
+
+Feasible, medium effort for basic support; high effort for full feature parity. Notes:
+
+- **Don't write a rasterizer** — wrap the stdlib/ecosystem: `golang.org/x/image/font`, `.../font/opentype`, `.../font/sfnt` (and `golang.org/x/image/math/fixed`). These parse and rasterize TrueType/OpenType.
+- **The type is already designed for it** — `Font` wraps `*BdfFont` with a `// Add additional support font types (truetype, etc.) here` comment. Add a parallel TrueType-backed face.
+- **Easy win, now unlocked:** because `*Image` implements `draw.Image` (§4.1), a `font.Drawer{Dst: img.data, Face: face, ...}.DrawString(s)` can render anti-aliased TrueType text straight onto an image in a few lines. Good for a basic `DrawTextTTF`-style method.
+- **The expensive part is parity** with the existing BDF pipeline: the current renderer is bitmap-specific (per-pixel `SetPoint` from `bdfChar.data` booleans) and supports `TextStyle` (etched/shadowed) and arbitrary-angle rotation. TrueType glyphs are anti-aliased coverage masks that must be **alpha-blended**, not set/unset — and rotation needs transformed rasterization. Unifying TrueType with etched/shadowed/rotated effects is the real work.
+- **Suggested path:** introduce a small `face` abstraction (glyph mask + advance), add a TrueType implementation, expose a basic anti-aliased `DrawString`-style method first, and treat style/rotation parity as follow-ups.
+
+## 10. QR codes
+
+- **Generator — easy and a good fit.** QR encoding is well-defined; use a mature encoder (`rsc.io/qr` or `github.com/skip2/go-qrcode`) to get the module bit-matrix, then render it with `FillRectangle` per dark module and save via `WriteImageFile`. A `qr` example tool is low effort and a strong demo. Implementing the encoder from scratch (Reed–Solomon ECC, masking) is a medium project but doable and dependency-free.
+- **Decoder — possible but largely out of scope.** Decoding is a computer-vision task (binarization, finder-pattern detection, perspective correction, grid sampling, then RS error correction). Mature ports exist (`github.com/makiuchi-d/gozxing`, `github.com/liyue201/goqr`). `ilibgo`'s role would only be loading the image (`ReadImageFile` → `image.Image`); the analysis belongs in a dedicated CV library. Reasonable as a `qrdecode` example that wraps `gozxing`, but not a core library feature — `ilibgo` is about image *creation/manipulation*, not *analysis*.
+
+---
+
 ## Suggested order of work
 
 1. **§1 correctness bugs** (especially 1.1–1.6) — these are shipping defects.
