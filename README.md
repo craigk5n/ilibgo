@@ -149,13 +149,17 @@ Each is a `package main` under its own directory; run with `go run ./<dir>`.
 | [`chart`](chart) | Bar-chart generator from `label=value` data |
 | [`sparkline`](sparkline) | Tiny inline trend graph from a number list |
 | [`qrgen`](qrgen) | Render a QR code (see the [`qr`](qr) package) |
+| [`barcode`](barcode) | Render a Code 39 barcode |
 | [`captcha`](captcha) | Distorted-text CAPTCHA generator |
 | [`watermark`](watermark) | Overlay a semi-transparent text watermark |
+| [`mandelbrot`](mandelbrot) | Render the Mandelbrot set (per-pixel coloring) |
 | [`fontsheet`](fontsheet) | Specimen catalog of the bundled fonts |
 | [`montage`](montage) | Compose images into a labeled grid |
 | [`displayfont`](displayfont) | Render a BDF font's glyphs to a sheet |
+| [`bdfinfo`](bdfinfo) | Print a BDF font's metadata |
 | [`thumbnails`](thumbnails) | Build a thumbnail index of images |
 | [`iconvert`](iconvert) | Convert an image between formats |
+| [`iresize`](iresize) | Resize an image with a selectable filter |
 | [`webreport`](webreport) | Graph Apache access-log activity |
 | [`bdftogo`](bdftogo) | Convert a `.bdf` font to Go source |
 
