@@ -217,14 +217,14 @@ Small programs that showcase the library and/or are useful on their own. Each is
 - **`montage`** ✅ — composes N images into a labeled grid with aspect-preserving `CopyImageScaled`, configurable columns/cell-size/padding/background, borders and filename labels (with ellipsis); a configurable generalization of `thumbnails`.
 
 **Examples (showcase value):**
-- **`mandelbrot`/fractal** — per-pixel `SetPoint`/`NewColor`; also a natural benchmark target.
-- **`iresize`** — scale an image via `CopyImageScaled` (good demo target for §5.3 quality scaling).
-- **`barcode`** — Code 39 / simple grid barcode with `FillRectangle`; pure geometry, no font.
+- **`mandelbrot`/fractal** ✅ — per-pixel `SetPoint`/`NewColor`, configurable view/zoom/iterations; also a natural benchmark target.
+- **`iresize`** ✅ — scale an image via `CopyImageScaledQuality` with a selectable filter (nearest/approx/bilinear/catmullrom) and aspect-preserving target size; demonstrates §5.3.
+- **`barcode`** ✅ — Code 39 barcode with `FillRectangle` (pure geometry, no font). Output verified to scan with an independent ZXing-port decoder across all character classes; a unit test asserts the pattern-table invariant.
 
 **Utilities / infra:**
-- **`bdfinfo`** — print a `.bdf`'s foundry/family/slant/ascent/descent/glyph-count; gives the parser a non-rendering consumer and exercises the metadata fields.
-- **Golden-image CI check** — render a known scene, diff against a committed PNG hash to catch visual regressions.
-- **Benchmarks** (`go test -bench`) — fills, `CopyImageScaled`, flood fill, fractal; anchor the perf claims from the `draw.Draw` work.
+- **`bdfinfo`** ✅ — prints a `.bdf`'s foundry/family/face/slant/weight/spacing/pixel-size/ascent/descent/glyph-count via the new `Font` metadata accessors; a non-rendering consumer of the parser.
+- **Golden-image CI check** ✅ — `golden_test.go` renders a fixed scene using only deterministic integer ops (fills, straight lines, BDF text) and compares a SHA-256 of the pixels against a committed hash, catching visual regressions.
+- **Benchmarks** ✅ — `bench_test.go` benchmarks `FillRectangle`, nearest vs CatmullRom scaling, `FloodFill`, and per-pixel `SetPoint` fills.
 
 ## 9. Scalable / TrueType font support — ✅ DONE (basic)
 
