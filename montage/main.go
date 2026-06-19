@@ -129,7 +129,7 @@ func compose(tiles []tile, cols, cw, ch, pad int, bgName string, label, border b
 			dh = 1
 		}
 		offX, offY := (cw-dw)/2, (ch-dh)/2
-		img.CopyImageScaled(t.img, 0, 0, sw, sh, cellX+offX, cellY+offY, dw, dh)
+		img.CopyImageScaledQuality(t.img, 0, 0, sw, sh, cellX+offX, cellY+offY, dw, dh, ilibgo.ScaleCatmullRom)
 
 		if border {
 			ilibgo.SetForeground(&gc, gray)

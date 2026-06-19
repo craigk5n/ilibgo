@@ -152,13 +152,17 @@ img.data.Pix[i+0], img.data.Pix[i+1], img.data.Pix[i+2], img.data.Pix[i+3] = r, 
 ### 5.2 `CopyImage` reassigns the GC foreground every pixel
 `copy.go:28-31` calls `GetPoint`+`SetForeground`+`SetPoint` per pixel. For a straight copy this is `draw.Draw` (one call). Keep the manual loop only for the transparent-color-skip feature, and even then write `Pix` directly.
 
-### 5.3 `CopyImageScaled` uses nearest-neighbor only
+### 5.3 `CopyImageScaled` uses nearest-neighbor only — ✅ DONE
+**Implemented.** Added `CopyImageScaledQuality(..., quality ScaleQuality)` which delegates to `golang.org/x/image/draw` with a `ScaleQuality` enum (`ScaleNearestNeighbor`, `ScaleApproxBiLinear`, `ScaleBiLinear`, `ScaleCatmullRom`). `CopyImageScaled` is unchanged (nearest-neighbor) for backward compatibility. The `montage` and `thumbnails` tools now use `ScaleCatmullRom` for smoother output. Original note below.
+
 `copy.go:44` acknowledges this. For quality scaling, delegate to `golang.org/x/image/draw` (`draw.CatmullRom`, `draw.ApproxBiLinear`) — already an indirect dependency via `x/image`.
 
 ### 5.4 Iterative flood fill
 Covered in §1.9 — also a performance issue: recursion + per-pixel `GetPoint` is slow and stack-heavy. Scanline flood fill with a `Pix`-backed visited check is far faster.
 
-### 5.5 Precompute trig in arc loops
+### 5.5 Precompute trig in arc loops — ✅ DONE
+**Implemented.** `DrawArc`, `DrawEnclosedArc`, and `FillArc` now step the angle with an incremental rotation matrix (two `Cos`/`Sin` calls total per arc) instead of calling `math.Cos`/`math.Sin` every iteration. Original note below.
+
 `arc.go` recomputes `math.Cos/Sin` and the `2*Pi/360` conversion inside the loop. Hoist the constant and, if needed, step with incremental rotation. Minor compared to the above.
 
 ---

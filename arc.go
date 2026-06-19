@@ -30,14 +30,19 @@ func (image *Image) DrawArc(gc GraphicsContext, x int, y int, r1 int, r2 int, a1
 	N = int(math.Abs(a2-a1)) + 8
 	a := a1 * 2.0 * math.Pi / 360.0
 	da := (a2 - a1) * (2.0 * math.Pi / 360.0) / (float64(N) - 1.0)
+	// Step the angle incrementally with a rotation matrix instead of calling
+	// Cos/Sin every iteration (see IDEAS §5.5).
+	cosCur, sinCur := math.Cos(a), math.Sin(a)
+	cosDa, sinDa := math.Cos(da), math.Sin(da)
 	for loop = 0; loop < N; loop++ {
-		myx = x + int(float64(r1)*math.Cos(a+float64(loop)*da))
-		myy = y + int(float64(r2)*math.Sin(a+float64(loop)*da))
+		myx = x + int(float64(r1)*cosCur)
+		myy = y + int(float64(r2)*sinCur)
 		if loop > 0 {
 			image.DrawLine(gc, lastx, lasty, myx, myy)
 		}
 		lastx = myx
 		lasty = myy
+		cosCur, sinCur = cosCur*cosDa-sinCur*sinDa, sinCur*cosDa+cosCur*sinDa
 	}
 
 	return nil
@@ -57,9 +62,11 @@ func (image *Image) DrawEnclosedArc(gc GraphicsContext, x int, y int, r1 int, r2
 	da := float64(a2-a1) * (2.0 * math.Pi / 360.0) / float64(N-1)
 	lastx := 0
 	lasty := 0
+	cosCur, sinCur := math.Cos(a), math.Sin(a)
+	cosDa, sinDa := math.Cos(da), math.Sin(da)
 	for loop := 0; loop < N; loop++ {
-		myx := x + int(float64(r1)*math.Cos(a+float64(loop)*da))
-		myy := y + int(float64(r2)*math.Sin(a+float64(loop)*da))
+		myx := x + int(float64(r1)*cosCur)
+		myy := y + int(float64(r2)*sinCur)
 		if loop > 0 {
 			image.DrawLine(gc, lastx, lasty, myx, myy)
 		}
@@ -68,6 +75,7 @@ func (image *Image) DrawEnclosedArc(gc GraphicsContext, x int, y int, r1 int, r2
 		}
 		lastx = myx
 		lasty = myy
+		cosCur, sinCur = cosCur*cosDa-sinCur*sinDa, sinCur*cosDa+cosCur*sinDa
 	}
 
 	return nil
@@ -87,11 +95,14 @@ func (image *Image) FillArc(gc GraphicsContext, x int, y int, r1 int, r2 int, a1
 	N := int(math.Abs(a2-a1)) + 9
 	a := a1 * 2.0 * math.Pi / 360.0
 	da := (a2 - a1) * (2.0 * math.Pi / 360.0) / float64(N-1)
+	cosCur, sinCur := math.Cos(a), math.Sin(a)
+	cosDa, sinDa := math.Cos(da), math.Sin(da)
 	for loop := 0; loop < N; loop++ {
 		var p Point
-		p.X = x + int(float64(r1)*math.Cos(a+float64(loop)*da))
-		p.Y = y + int(float64(r2)*math.Sin(a+float64(loop)*da))
+		p.X = x + int(float64(r1)*cosCur)
+		p.Y = y + int(float64(r2)*sinCur)
 		points = append(points, p)
+		cosCur, sinCur = cosCur*cosDa-sinCur*sinDa, sinCur*cosDa+cosCur*sinDa
 	}
 
 	// if we're not drawing a circle, add in the center point
