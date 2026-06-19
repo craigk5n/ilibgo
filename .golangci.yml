@@ -1,0 +1,25 @@
+version: "2"
+
+# Linters for the ilibgo library and its example tools.
+#
+# errcheck is intentionally disabled: the drawing primitives (DrawLine,
+# FillRectangle, the arc/circle helpers, ...) return an error only to validate
+# inputs, and callers routinely ignore it inside tight rendering loops. Flagging
+# every such call would be pure noise. staticcheck still catches genuinely
+# discarded errors that matter.
+linters:
+  default: standard # errcheck, govet, ineffassign, staticcheck, unused
+  disable:
+    - errcheck
+  enable:
+    - misspell
+    - unconvert
+    - bodyclose
+  exclusions:
+    rules:
+      # QF1003 suggests rewriting long if/else-if chains in the legacy
+      # webreport tool as tagged switches. The existing code is correct and
+      # the blocks are large; this is an opinionated refactor, not a defect.
+      - linters:
+          - staticcheck
+        text: "QF1003"

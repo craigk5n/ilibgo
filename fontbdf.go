@@ -102,7 +102,7 @@ func LoadFontFromFile(path string, name string) (*Font, error) {
 // embedded with go:embed. It splits the data into lines (handling both "\n"
 // and "\r\n") and delegates to LoadFontFromData.
 func LoadFontFromBytes(name string, data []byte) (*Font, error) {
-	var lines []string = make([]string, 0)
+	lines := make([]string, 0)
 	scanner := bufio.NewScanner(bytes.NewReader(data))
 	for scanner.Scan() {
 		lines = append(lines, scanner.Text())
@@ -166,6 +166,7 @@ func hexDigit(r rune) int {
 // LoadFontFromData("timR12", font_timR12)
 func LoadFontFromData(name string, lines []string) (*Font, error) {
 	var font BdfFont
+	font.name = name
 
 	var char BdfChar
 	inBitmap := false
@@ -218,6 +219,10 @@ func LoadFontFromData(name string, lines []string) (*Font, error) {
 			if len(fields) >= 2 {
 				font.proportional = trimQuotes(fields[1]) == "P"
 			}
+		case keyword == "FOUNDRY": // "Adobe"
+			font.foundry = trimQuotes(bdfValue(line))
+		case keyword == "FAMILY_NAME": // "Helvetica", "Times"
+			font.family = trimQuotes(bdfValue(line))
 		case keyword == "FACE_NAME": // "Times Italic", "Helvetica"
 			font.faceName = trimQuotes(bdfValue(line))
 		case keyword == "SETWIDTH_NAME": // "Normal"
