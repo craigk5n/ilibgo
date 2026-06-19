@@ -24,10 +24,10 @@ import (
 // CopyImage copies a rectangular region of source onto this (destination)
 // image. The gc parameter is retained for API compatibility but is unused; the
 // copy is a straight pixel transfer clipped to both images' bounds.
-func (dest *Image) CopyImage(source *Image, gc GraphicsContext, src_x int, src_y int, width int, height int,
-	dest_x int, dest_y int) error {
-	dstRect := image.Rect(dest_x, dest_y, dest_x+width, dest_y+height)
-	srcPoint := image.Point{X: src_x, Y: src_y}
+func (dest *Image) CopyImage(source *Image, gc GraphicsContext, srcX int, srcY int, width int, height int,
+	destX int, destY int) error {
+	dstRect := image.Rect(destX, destY, destX+width, destY+height)
+	srcPoint := image.Point{X: srcX, Y: srcY}
 	draw.Draw(dest.data, dstRect, source.data, srcPoint, draw.Src)
 	return nil
 }
@@ -35,23 +35,23 @@ func (dest *Image) CopyImage(source *Image, gc GraphicsContext, src_x int, src_y
 // CopyImageScaled scales a region of source onto this (destination) image
 // using nearest-neighbor sampling.
 func (dest *Image) CopyImageScaled(source *Image,
-	src_x int, src_y int, src_width int, src_height int,
-	dest_x int, dest_y int, dest_width int, dest_height int) error {
+	srcX int, srcY int, srcWidth int, srcHeight int,
+	destX int, destY int, destWidth int, destHeight int) error {
 
 	// When scaling down, we might want to add an algorithm for averaging
 	// a series of source pixels into the destination pixel.  For now,
 	// we just grab one color.
 	var gc GraphicsContext
-	scalex := float64(dest_width) / float64(src_width)
-	scaley := float64(dest_height) / float64(src_height)
-	for y := dest_y; y < dest_y+dest_height; y++ {
-		for x := dest_x; x < dest_x+dest_width; x++ {
+	scaleX := float64(destWidth) / float64(srcWidth)
+	scaleY := float64(destHeight) / float64(srcHeight)
+	for y := destY; y < destY+destHeight; y++ {
+		for x := destX; x < destX+destWidth; x++ {
 			// get location from source image for this location
 			// x2,y2 is location in source image.
-			tempx := float64(src_x) + float64(x-dest_x)/scalex
-			x2 := int(tempx)
-			tempy := float64(src_y) + float64(y-dest_y)/scaley
-			y2 := int(tempy)
+			tempX := float64(srcX) + float64(x-destX)/scaleX
+			x2 := int(tempX)
+			tempY := float64(srcY) + float64(y-destY)/scaleY
+			y2 := int(tempY)
 			gc.foreground = source.GetPoint(x2, y2)
 			dest.SetPoint(gc, x, y)
 		}
