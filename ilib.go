@@ -14,12 +14,14 @@ package ilibgo
 
 import (
 	"errors"
+	"fmt"
 	"image"
 	"image/color"
 	"image/draw"
 	"image/gif"
 	"image/jpeg"
 	"image/png"
+	"io"
 	"path/filepath"
 
 	"github.com/lmittmann/ppm"
@@ -150,48 +152,50 @@ func CreateImageWithBackground(width int, height int, background Color) *Image {
 	return ret
 }
 
-// Writes an image to a file.
-// The file is left open for the caller to close.
-func WriteImageFile(f *os.File, img *Image, format ImageFormat) error {
-	var err error
+// Encode writes img to w in the given format. It is the streaming core of the
+// package's output path: w may be any io.Writer (a file, bytes.Buffer, HTTP
+// response, gzip stream, etc.). The caller owns w and is responsible for
+// closing it.
+func Encode(w io.Writer, img *Image, format ImageFormat) error {
 	switch format {
 	case FormatPNG:
-		err = png.Encode(f, img.data)
+		return png.Encode(w, img.data)
 	case FormatJPEG:
 		// TODO: Allow user to specify quality
-		var options jpeg.Options = jpeg.Options{Quality: jpeg.DefaultQuality}
-		err = jpeg.Encode(f, img.data, &options)
+		options := jpeg.Options{Quality: jpeg.DefaultQuality}
+		return jpeg.Encode(w, img.data, &options)
 	case FormatGIF:
-		var options gif.Options = gif.Options{NumColors: 256}
-		err = gif.Encode(f, img.data, &options)
+		options := gif.Options{NumColors: 256}
+		return gif.Encode(w, img.data, &options)
 	case FormatBMP:
-		err = bmp.Encode(f, img.data)
+		return bmp.Encode(w, img.data)
 	case FormatTIFF:
 		// x/image/tiff's encoder only supports Uncompressed and Deflate;
 		// LZW is decode-only and returns "unsupported compression".
-		var tiffOptions tiff.Options = tiff.Options{Compression: tiff.Deflate}
-		err = tiff.Encode(f, img.data, &tiffOptions)
+		options := tiff.Options{Compression: tiff.Deflate}
+		return tiff.Encode(w, img.data, &options)
 	case FormatPPM:
-		err = ppm.Encode(f, img.data)
+		return ppm.Encode(w, img.data)
 	case FormatPGM:
 		// TODO: Can we force PGM here?
-		err = errors.New("writing PGM not yet supported")
+		return errors.New("writing PGM not yet supported")
 	case FormatPBM:
 		// TODO: Can we force PBM here?
-		err = errors.New("writing PBM not yet supported")
+		return errors.New("writing PBM not yet supported")
 	case FormatXPM:
 		// TODO
-		err = errors.New("writing XPM not yet supported")
+		return errors.New("writing XPM not yet supported")
 	}
-	return err
+	return fmt.Errorf("ilibgo: unknown image format %d", format)
 }
 
-// Creates an image from an image file.
-// The file is left open for the caller to close.
-func ReadImageFile(f *os.File) (*Image, error) {
+// Decode reads an image from r (any io.Reader) and returns it as an *Image.
+// The format is detected automatically from the stream contents via the
+// registered image decoders. The caller owns r.
+func Decode(r io.Reader) (*Image, error) {
 	// image.Decode handles all registered image types
 	var ret Image
-	img, _, err := image.Decode(f)
+	img, _, err := image.Decode(r)
 	if err != nil {
 		return nil, err
 	}
@@ -202,4 +206,41 @@ func ReadImageFile(f *os.File) (*Image, error) {
 	draw.Draw(ret.data, ret.data.Bounds(), img, b.Min, draw.Src)
 
 	return &ret, nil
+}
+
+// WriteImageFile writes an image to an already-open file (or any io.Writer).
+// The writer is left open for the caller to close. It is a thin wrapper over
+// Encode.
+func WriteImageFile(f io.Writer, img *Image, format ImageFormat) error {
+	return Encode(f, img, format)
+}
+
+// ReadImageFile creates an image from an already-open file (or any io.Reader).
+// The reader is left open for the caller to close. It is a thin wrapper over
+// Decode.
+func ReadImageFile(f io.Reader) (*Image, error) {
+	return Decode(f)
+}
+
+// SaveImageFile encodes img to the file at path, creating or truncating it.
+// It is a convenience wrapper that opens the file, encodes, and closes it,
+// joining any encode and close errors so a failed flush is not lost.
+func SaveImageFile(path string, img *Image, format ImageFormat) error {
+	f, err := os.Create(path)
+	if err != nil {
+		return err
+	}
+	encErr := Encode(f, img, format)
+	closeErr := f.Close()
+	return errors.Join(encErr, closeErr)
+}
+
+// LoadImageFile opens the image file at path, decodes it, and closes the file.
+func LoadImageFile(path string) (*Image, error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+	return Decode(f)
 }
