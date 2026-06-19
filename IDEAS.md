@@ -198,10 +198,10 @@ Small programs that showcase the library and/or are useful on their own. Each is
 
 - **`fontsheet`** ✅ — specimen catalog: a sample line drawn in each of a curated set of bundled fonts (families/styles/sizes), labeled and stacked, loaded straight from the embedded accessors; doubles as visual font QA.
 - **`sparkline`** ✅ — tiny inline trend graph from a number list (line + optional area fill and min/max/last markers); a minimal showcase of `DrawLine`/`FillPolygon`/`FillCircle`.
+- **`montage`** ✅ — composes N images into a labeled grid with aspect-preserving `CopyImageScaled`, configurable columns/cell-size/padding/background, borders and filename labels (with ellipsis); a configurable generalization of `thumbnails`.
 
 **Examples (showcase value):**
 - **`mandelbrot`/fractal** — per-pixel `SetPoint`/`NewColor`; also a natural benchmark target.
-- **`montage`** — compose N images into a labeled grid (a configurable generalization of `thumbnails`).
 - **`iresize`** — scale an image via `CopyImageScaled` (good demo target for §5.3 quality scaling).
 - **`barcode`** — Code 39 / simple grid barcode with `FillRectangle`; pure geometry, no font.
 
