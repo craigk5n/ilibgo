@@ -1,74 +1,189 @@
-# Ilib - Image Library for Go
+# ilibgo — Image Library for Go
 
-Copyright (C) 2001-2022 Craig Knudsen, craig@k5n.us
-http://github.com/craigk5n/ilibgo
+[![Go Reference](https://pkg.go.dev/badge/github.com/craigk5n/ilibgo.svg)](https://pkg.go.dev/github.com/craigk5n/ilibgo)
+[![Go Report Card](https://goreportcard.com/badge/github.com/craigk5n/ilibgo)](https://goreportcard.com/report/github.com/craigk5n/ilibgo)
+[![CI](https://github.com/craigk5n/ilibgo/actions/workflows/ci.yml/badge.svg)](https://github.com/craigk5n/ilibgo/actions/workflows/ci.yml)
+[![License: LGPL v2.1](https://img.shields.io/badge/License-LGPL%20v2.1-blue.svg)](LICENSE)
 
-Ilib is a library (and some tools and examples) written in Go
-that can read, create, manipulate and save images.  It is capable
-of using X11 BDF fonts for drawing text.  That means you get
-lots of fonts to use.  You can even create your
-own if you know how to create an X11 BDF font.  It should be able
-to read any image file that the base Go image package supports.
+`ilibgo` is a pure-Go library for reading, creating, manipulating, and saving
+images, with a focus on simple drawing primitives and text rendering. It can
+read any format the standard `image` package supports and draw text with both
+embedded X11 BDF bitmap fonts and scalable, anti-aliased TrueType/OpenType
+fonts.
 
+<img src="docs/images/truetype.png" alt="anti-aliased TrueType text" width="500">
 
-## History
+## Gallery
 
-This code was ported to Go from the original [version in C](https://github.com/craigk5n/ilib).
-The API remains very close to the original C code.
-All the functions dropped the "I" at the start since Go supports
-namespaces.  The original C library was modeled after the
-X11 functions, documented
-[here](https://www.x.org/releases/X11R7.6/doc/man/man3/) as man pages.
+These are produced by the bundled [example tools](#tools-and-examples).
 
+<table>
+  <tr>
+    <td align="center"><img src="docs/images/chart.png" alt="bar chart" width="360"><br><code>chart</code></td>
+    <td align="center"><img src="docs/images/qr.png" alt="QR code" width="150"><br><code>qrgen</code></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="docs/images/captcha.png" alt="CAPTCHA" width="240"><br><code>captcha</code></td>
+    <td align="center"><img src="docs/images/sparkline.png" alt="sparkline"><br><code>sparkline</code></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="docs/images/watermark.png" alt="watermarked image" width="360"><br><code>watermark</code></td>
+    <td align="center"><img src="docs/images/fontsheet.png" alt="font specimen sheet" width="360"><br><code>fontsheet</code></td>
+  </tr>
+</table>
 
-## BDF Fonts
+## Features
 
-Additional BDF Fonts can be found at:
-  [https://gitlab.freedesktop.org/xorg/font](https://gitlab.freedesktop.org/xorg/font)
+- **Read** any format registered with the standard `image` package; **write**
+  PNG, JPEG, GIF, BMP, TIFF, and PPM.
+- **Drawing primitives**: points, lines, rectangles, arcs, circles, ellipses,
+  polygons, flood fill, and (scaled) image copy.
+- **Method-style API** on `*Image` (e.g. `img.FillRectangle(gc, ...)`); `*Image`
+  implements the standard `image.Image` and `draw.Image` interfaces, so it drops
+  into `image/draw`, the stdlib encoders, and `golang.org/x/image` scalers.
+- **Text**: embedded X11 BDF bitmap fonts (with arbitrary-angle rotation and
+  etched/shadowed styles) plus scalable, anti-aliased **TrueType/OpenType**.
+- No required third-party dependencies beyond `golang.org/x/image`.
 
-The fonts bundled with this package are stored as `.bdf` files under `fonts/`
-and compiled into the binary with [`go:embed`](https://pkg.go.dev/embed); each
-foundry package exposes `Font_<name>() []string` accessors backed by the
-embedded data.
+## Install
 
-Fonts can also be loaded at run-time from an external `.bdf` file with
-`LoadFontFromFile` (or from bytes with `LoadFontFromBytes`). If you prefer to
-bake your own fonts into Go source as `[]string` literals instead of embedding
-`.bdf` files, the [`bdftogo`](https://github.com/craigk5n/ilibgo/tree/main/bdftogo)
-tool included in this package still does that.
+```sh
+go get github.com/craigk5n/ilibgo
+```
 
+## Quick start
 
-Note that some of the BDF fonts are bundled with this package.  Please
-see the [COPYING](https://gitlab.freedesktop.org/xorg/font/adobe-100dpi/-/blob/master/COPYING)
-notice
+```go
+package main
+
+import (
+	"os"
+
+	"github.com/craigk5n/ilibgo"
+	font "github.com/craigk5n/ilibgo/fonts/adobe_100dpi"
+)
+
+func main() {
+	white, _ := ilibgo.AllocNamedColor("white")
+	img := ilibgo.CreateImageWithBackground(240, 80, white)
+
+	gc := ilibgo.CreateGraphicsContext()
+	blue, _ := ilibgo.AllocNamedColor("steelblue")
+	ilibgo.SetForeground(&gc, blue)
+	img.FillRectangle(gc, 10, 10, 220, 60)
+
+	// Draw text with a bundled bitmap font...
+	f, _ := ilibgo.LoadFontFromData("helvB18", font.Font_helvB18())
+	ilibgo.SetFont(&gc, f)
+	white2, _ := ilibgo.AllocNamedColor("white")
+	ilibgo.SetForeground(&gc, white2)
+	img.DrawString(gc, 24, 50, "Hello, ilibgo!")
+
+	// ...or with a scalable TrueType font:
+	// tt, _ := ilibgo.LoadTrueTypeFromFile("Inter.ttf", "inter", 24, 72)
+	// ilibgo.SetFont(&gc, tt)
+
+	out, _ := os.Create("hello.png")
+	defer out.Close()
+	ilibgo.WriteImageFile(out, img, ilibgo.FormatPNG)
+}
+```
+
+The drawing operations are methods on `*Image`. A `GraphicsContext` (passed by
+value) carries the foreground/background color, font, and line/text style. The
+older free-function forms (`ilibgo.FillRectangle(img, gc, ...)`) still work but
+are deprecated in favor of the methods.
+
+## Fonts
+
+### Bitmap (BDF)
+
+The bundled fonts are stored as `.bdf` files under [`fonts/`](fonts) and
+compiled into the binary with [`go:embed`](https://pkg.go.dev/embed). Each
+foundry is its own package exposing `Font_<name>() []string` accessors, which
+you pass to `LoadFontFromData`. You can also load any `.bdf` at run time with
+`LoadFontFromFile` (or from bytes with `LoadFontFromBytes`).
+
+More BDF fonts are available from the
+[X.Org font project](https://gitlab.freedesktop.org/xorg/font), and you can
+edit or create them with [FontForge](https://github.com/fontforge/fontforge).
+The [`bdftogo`](bdftogo) tool converts a `.bdf` into Go `[]string` source if you
+prefer that to embedding the file.
+
+### Scalable (TrueType / OpenType)
+
+```go
+f, _ := ilibgo.LoadTrueTypeFromFile("Inter.ttf", "inter", 32, 72) // path, name, points, dpi
+ilibgo.SetFont(&gc, f)
+img.DrawString(gc, x, y, "Smooth, anti-aliased text")
+```
+
+TrueType fonts render anti-aliased and support the etched/shadowed text styles.
+Arbitrary-angle rotation (`DrawStringRotatedAngle`) is currently supported only
+for BDF fonts.
+
+### Bundled font license
+
+Some Adobe/X.Org BDF fonts are bundled. Per their
+[COPYING](https://gitlab.freedesktop.org/xorg/font/adobe-100dpi/-/blob/master/COPYING)
+notice:
 
 > Copyright 1984-1989, 1994 Adobe Systems Incorporated.
 > Copyright 1988, 1994 Digital Equipment Corporation.
-> 
-> Adobe is a trademark of Adobe Systems Incorporated which may be
-> registered in certain jurisdictions.
-> Permission to use these trademarks is hereby granted only in
-> association with the images described in this file.
-> 
-> Permission to use, copy, modify, distribute and sell this software
-> and its documentation for any purpose and without fee is hereby
-> granted, provided that the above copyright notices appear in all
-> copies and that both those copyright notices and this permission
-> notice appear in supporting documentation, and that the names of
-> Adobe Systems and Digital Equipment Corporation not be used in
-> advertising or publicity pertaining to distribution of the software
-> without specific, written prior permission.  Adobe Systems and
-> Digital Equipment Corporation make no representations about the
-> suitability of this software for any purpose.  It is provided "as
-> is" without express or implied warranty.
+>
+> Permission to use, copy, modify, distribute and sell this software and its
+> documentation for any purpose and without fee is hereby granted, provided that
+> the above copyright notices appear in all copies ... Adobe Systems and Digital
+> Equipment Corporation make no representations about the suitability of this
+> software for any purpose. It is provided "as is" without express or implied
+> warranty.
 
+## Tools and examples
 
-Edit/Import/Create BDF fonts with
-[FontForge](https://github.com/fontforge/fontforge).
+Each is a `package main` under its own directory; run with `go run ./<dir>`.
 
-## Building
-`go build`
+| Tool | Description |
+|------|-------------|
+| [`sample`](sample) | Demonstrates the drawing and text API |
+| [`truetype`](truetype) | Render text with a scalable TrueType/OpenType font |
+| [`chart`](chart) | Bar-chart generator from `label=value` data |
+| [`sparkline`](sparkline) | Tiny inline trend graph from a number list |
+| [`qrgen`](qrgen) | Render a QR code (see the [`qr`](qr) package) |
+| [`captcha`](captcha) | Distorted-text CAPTCHA generator |
+| [`watermark`](watermark) | Overlay a semi-transparent text watermark |
+| [`fontsheet`](fontsheet) | Specimen catalog of the bundled fonts |
+| [`montage`](montage) | Compose images into a labeled grid |
+| [`displayfont`](displayfont) | Render a BDF font's glyphs to a sheet |
+| [`thumbnails`](thumbnails) | Build a thumbnail index of images |
+| [`iconvert`](iconvert) | Convert an image between formats |
+| [`webreport`](webreport) | Graph Apache access-log activity |
+| [`bdftogo`](bdftogo) | Convert a `.bdf` font to Go source |
 
+The [`qr`](qr) sub-package is a reusable, dependency-free QR Code encoder.
+
+## Building and testing
+
+```sh
+go build ./...
+go test ./...                 # unit tests
+go test -race -cover ./...    # with the race detector and coverage
+```
+
+CI runs formatting, `go vet`, the race-enabled tests, and a coverage gate on
+every push and pull request.
 
 ## History
-See [ChangeLog](ChangeLog.md)
+
+This library was ported to Go from the original
+[C version](https://github.com/craigk5n/ilib); the API stays close to the C
+original (which was modeled after the X11 graphics functions), with the leading
+`I` dropped from most names. See the [ChangeLog](ChangeLog.md) for release
+history.
+
+## License
+
+Copyright (C) 2001-2022 Craig Knudsen, craig@k5n.us.
+
+Released under the GNU Lesser General Public License v2.1 — see
+[LICENSE](LICENSE). Bundled BDF fonts carry their own permissive notices (see
+above).
