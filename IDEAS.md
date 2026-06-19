@@ -194,10 +194,10 @@ Small programs that showcase the library and/or are useful on their own. Each is
 - **`chart`** ✅ — bar-chart generator from `label=value` args or `label,value` stdin; a general successor to the hardcoded `webreport` grapher.
 - **`qr` package + `qrgen` tool** ✅ — dependency-free QR encoder (byte mode, all versions/ECC levels, Reed-Solomon, mask selection) plus a renderer that draws it with `FillRectangle`. See §10.
 - **`captcha`** ✅ — distorted-text CAPTCHA: per-char `DrawStringRotatedAngle` with random angle/jitter/color, noise lines (`DrawLine`) and speckle (`SetPoint`); prints the answer and is seedable for reproducibility.
+- **`watermark`** ✅ — tiled/centered semi-transparent text watermark, alpha-blended over a loaded image by reading pixels back via `Color.RGBA()` and mixing with `NewColor`. Exercises image round-trip + rotation + blending.
 
 **Examples (showcase value):**
 - **`sparkline`** — tiny inline trend image from a number list; minimal "hello world" for the draw API.
-- **`watermark`** — overlay semi-transparent text/logo onto a loaded image; demonstrates the alpha `NewColor` + image round-trip.
 - **`fontsheet`** — render a full glyph specimen sheet for a bundled font by iterating the embedded `fonts.FS`; doubles as visual font QA.
 - **`mandelbrot`/fractal** — per-pixel `SetPoint`/`NewColor`; also a natural benchmark target.
 - **`montage`** — compose N images into a labeled grid (a configurable generalization of `thumbnails`).
