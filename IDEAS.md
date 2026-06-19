@@ -106,7 +106,9 @@ Target the repo's 80% coverage bar (`go test -cover -race ./...`).
 ### 3.3 Add CI + linters
 No CI config present. Add a GitHub Actions workflow running `go vet`, `go test -race -cover`, `staticcheck`, `golangci-lint`, and `gosec`. `go vet` alone would have flagged the `Sscanf` arg mismatch in §1.6 and likely the empty-slice in §1.4.
 
-### 3.4 Use `io.Reader`/`io.Writer`, not `*os.File`
+### 3.4 Use `io.Reader`/`io.Writer`, not `*os.File` — ✅ DONE
+**Implemented.** `Encode(io.Writer, *Image, ImageFormat)` / `Decode(io.Reader)` are the streaming core (in-memory `bytes.Buffer`, HTTP responses, gzip streams, etc.). `WriteImageFile`/`ReadImageFile` were widened to take `io.Writer`/`io.Reader` (an `*os.File` still satisfies them — source-compatible) and now forward to `Encode`/`Decode`. Added `SaveImageFile(path, …)` / `LoadImageFile(path)` convenience wrappers that open/close the file (`SaveImageFile` joins the encode and close errors via `errors.Join`). Original note below.
+
 `ReadImageFile(f *os.File)` / `WriteImageFile(f *os.File, …)` force a file. Accepting `io.Reader`/`io.Writer` makes them testable in-memory (`bytes.Buffer`), usable with HTTP responses, gzip streams, etc. Keep thin `…File(path string)` convenience wrappers that open/close.
 
 ### 3.5 snake_case parameter names
