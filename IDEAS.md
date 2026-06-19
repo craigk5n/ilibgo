@@ -114,10 +114,14 @@ No CI config present. Add a GitHub Actions workflow running `go vet`, `go test -
 ### 3.5 snake_case parameter names
 `copy.go`: `src_x`, `src_y`, `dest_x`, `dest_width`… Go uses `srcX`, `destWidth`. Minor but it's the first thing reviewers notice.
 
-### 3.6 Add package docs and runnable examples
+### 3.6 Add package docs and runnable examples — ✅ DONE
+**Implemented.** Added `example_test.go` with runnable `Example*` functions (`ExampleCreateImageWithBackground`, `ExampleAllocNamedColor`, `ExampleImage_FillRectangle`, `ExampleEncode`, `ExampleImage_DrawString`) — all have `// Output:` assertions so they run under `go test` and render in godoc/pkg.go.dev. No separate `doc.go` was added since `ilib.go` already carries the package comment (a second one would duplicate it). Original note below.
+
 There's a good package comment in `ilib.go`, but no `Example_*` functions (which appear in godoc and run under `go test`). Add `ExampleCreateImage`, `ExampleDrawString`, etc. Consider a `doc.go`.
 
-### 3.7 Dead/placeholder fields
+### 3.7 Dead/placeholder fields — ✅ DONE
+**Implemented.** Removed the unused `Image.comments` field. Go's stdlib PNG/JPEG encoders don't expose a way to write text metadata, so implementing pass-through wasn't practical with the current encoders; the dead field was dropped instead. Original note below.
+
 `Image.comments` (`ilib.go:59`) is parsed nowhere and written nowhere (TODO). Either implement metadata pass-through to PNG/JPEG or remove it.
 
 ---
