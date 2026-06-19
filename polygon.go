@@ -76,14 +76,14 @@ func (image *Image) FillPolygon(gc GraphicsContext, points []Point) error {
 	gc.lineWidth = 1
 
 	// create an array of lines
-	var lines []lineType = make([]lineType, 0)
+	lines := make([]lineType, 0)
 	for loop := 1; loop < len(points); loop++ {
-		var line lineType = lineType{x1: points[loop-1].X, y1: points[loop-1].Y, x2: points[loop].X, y2: points[loop].Y}
+		line := lineType{x1: points[loop-1].X, y1: points[loop-1].Y, x2: points[loop].X, y2: points[loop].Y}
 		setLineSlope(&line)
 		lines = append(lines, line)
 	}
 	// last line connects first and last points
-	var line lineType = lineType{x1: points[0].X, y1: points[0].Y, x2: points[len(points)-1].X, y2: points[len(points)-1].Y}
+	line := lineType{x1: points[0].X, y1: points[0].Y, x2: points[len(points)-1].X, y2: points[len(points)-1].Y}
 	setLineSlope(&line)
 	lines = append(lines, line)
 

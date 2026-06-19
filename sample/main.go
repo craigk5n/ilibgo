@@ -79,8 +79,7 @@ func main() {
 	largefont, _ := ilibgo.LoadFontFromData("helvR24", font.Font_helvR24())
 
 	ilibgo.SetFont(&gc, largefont)
-	textWidth, textHeight, _ := ilibgo.TextDimensions(gc, largefont, text)
-	textHeight += (textHeight / 2) // extra padding
+	textWidth, _, _ := ilibgo.TextDimensions(gc, largefont, text)
 
 	// draw arc
 	boxHeight := 100

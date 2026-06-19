@@ -103,7 +103,9 @@ No `*_test.go` files exist. High-value, low-effort targets:
 - **Benchmarks** for `FillRectangle`, `CopyImageScaled`, `FloodFill`.
 Target the repo's 80% coverage bar (`go test -cover -race ./...`).
 
-### 3.3 Add CI + linters
+### 3.3 Add CI + linters — ✅ DONE
+**Implemented.** A GitHub Actions workflow already ran `go vet`, `go build`, `go test -race`, a gofmt check, and the coverage gate. This adds a dedicated `lint` job running `staticcheck`, `golangci-lint` (config in `.golangci.yml`: govet, ineffassign, unused, staticcheck, misspell, unconvert, bodyclose; errcheck disabled because the drawing primitives return an error only for input validation and callers ignore it in tight loops), and `gosec` (with domain-appropriate rule exclusions — G104 unhandled errors, G115 int→uint8 color math, G304/G703 user-supplied file paths in a file-loading library, G404 captcha/sample visual-noise RNG). Linters are installed via `go install` against the stable toolchain so the analyzers always match the Go version. Fixed all real findings (ST1023 redundant type decls, an ineffectual assignment, an unnecessary conversion, an unnecessary `fmt.Sprintf`). Original note below.
+
 No CI config present. Add a GitHub Actions workflow running `go vet`, `go test -race -cover`, `staticcheck`, `golangci-lint`, and `gosec`. `go vet` alone would have flagged the `Sscanf` arg mismatch in §1.6 and likely the empty-slice in §1.4.
 
 ### 3.4 Use `io.Reader`/`io.Writer`, not `*os.File` — ✅ DONE

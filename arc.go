@@ -86,7 +86,7 @@ func (image *Image) FillArc(gc GraphicsContext, x int, y int, r1 int, r2 int, a1
 	if r1 < 0 || r2 < 0 {
 		return fmt.Errorf("ilibgo: FillArc: negative radius (r1=%d, r2=%d)", r1, r2)
 	}
-	var points []Point = make([]Point, 0)
+	points := make([]Point, 0)
 
 	// because our y is upside down, make all angles their negative
 	a1 = 360 - a1

@@ -141,7 +141,7 @@ func ImageHeight(img *Image) int {
 
 func CreateImage(width int, height int) *Image {
 	img := image.NewRGBA(image.Rect(0, 0, width, height))
-	var ret Image = Image{data: img, width: width, height: height}
+	ret := Image{data: img, width: width, height: height}
 	return &ret
 }
 

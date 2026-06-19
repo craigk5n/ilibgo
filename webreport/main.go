@@ -117,7 +117,7 @@ type GraphType int
 const BarGraph GraphType = 1
 const LineGraph GraphType = 2
 
-var outputType OutputType = OutputType(DayOfMonth)
+var outputType = DayOfMonth
 var graphType GraphType = GraphType(DayOfMonth)
 var displayHeader bool = true
 var lineWidth int = 2 // for line graphs (can use 1-3)
@@ -670,7 +670,7 @@ func generateOutput(fp *os.File, title string) {
 			temp = fmt.Sprintf("Time range: %s through %s",
 				prettyStart, prettyStop)
 		} else {
-			temp = fmt.Sprintf("Time range: all")
+			temp = "Time range: all"
 		}
 		im_out.DrawString(gc, 5, height-23, temp)
 	}
