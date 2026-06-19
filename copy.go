@@ -3,6 +3,8 @@ package ilibgo
 import (
 	"image"
 	"image/draw"
+
+	xdraw "golang.org/x/image/draw"
 )
 
 // Description:
@@ -32,8 +34,56 @@ func (dest *Image) CopyImage(source *Image, gc GraphicsContext, srcX int, srcY i
 	return nil
 }
 
+// ScaleQuality selects the resampling filter used by CopyImageScaledQuality.
+// Higher-quality filters are smoother but slower; nearest-neighbor is fastest
+// and blockiest.
+type ScaleQuality int
+
+const (
+	// ScaleNearestNeighbor picks the closest source pixel. Fastest and
+	// blockiest; matches the behavior of CopyImageScaled.
+	ScaleNearestNeighbor ScaleQuality = iota
+	// ScaleApproxBiLinear is a fast bilinear approximation — a good default
+	// for thumbnails.
+	ScaleApproxBiLinear
+	// ScaleBiLinear is full bilinear interpolation (smoother than the
+	// approximate variant).
+	ScaleBiLinear
+	// ScaleCatmullRom is a high-quality bicubic filter; best for downscaling
+	// photographs where sharpness matters.
+	ScaleCatmullRom
+)
+
+// CopyImageScaledQuality scales a region of source onto this (destination)
+// image using the chosen resampling filter, delegating to
+// golang.org/x/image/draw. Unlike CopyImageScaled (nearest-neighbor only), it
+// can produce smooth, anti-aliased results. The destination region is
+// overwritten (no alpha blending).
+func (dest *Image) CopyImageScaledQuality(source *Image,
+	srcX int, srcY int, srcWidth int, srcHeight int,
+	destX int, destY int, destWidth int, destHeight int,
+	quality ScaleQuality) error {
+
+	var interp xdraw.Interpolator
+	switch quality {
+	case ScaleApproxBiLinear:
+		interp = xdraw.ApproxBiLinear
+	case ScaleBiLinear:
+		interp = xdraw.BiLinear
+	case ScaleCatmullRom:
+		interp = xdraw.CatmullRom
+	default:
+		interp = xdraw.NearestNeighbor
+	}
+	dstRect := image.Rect(destX, destY, destX+destWidth, destY+destHeight)
+	srcRect := image.Rect(srcX, srcY, srcX+srcWidth, srcY+srcHeight)
+	interp.Scale(dest.data, dstRect, source.data, srcRect, xdraw.Src, nil)
+	return nil
+}
+
 // CopyImageScaled scales a region of source onto this (destination) image
-// using nearest-neighbor sampling.
+// using nearest-neighbor sampling. For smoother results, use
+// CopyImageScaledQuality.
 func (dest *Image) CopyImageScaled(source *Image,
 	srcX int, srcY int, srcWidth int, srcHeight int,
 	destX int, destY int, destWidth int, destHeight int) error {

@@ -223,9 +223,9 @@ func main() {
 		outImage.DrawLine(gc, x-1, y+iconH+1, x+iconW+1, y+iconH+1)
 		outImage.DrawLine(gc, x+iconW+1, y-1, x+iconW+1, y+iconH+1)
 		ilibgo.SetForeground(&gc, black)
-		outImage.CopyImageScaled(img,
+		outImage.CopyImageScaledQuality(img,
 			0, 0, ilibgo.ImageWidth(img), ilibgo.ImageHeight(img),
-			x+(iconW-thisW)/2, y+(iconH-thisH)/2, thisW, thisH)
+			x+(iconW-thisW)/2, y+(iconH-thisH)/2, thisW, thisH, ilibgo.ScaleCatmullRom)
 		/* don't write more text than will fit under the image. */
 		l := len(filename)
 		name := filename
