@@ -60,10 +60,9 @@ const BlackPixel int = 0
 const WhitePixel int = 1
 
 type Image struct {
-	width    int
-	height   int
-	comments string // TODO: save off as metadata in image
-	data     *image.RGBA
+	width  int
+	height int
+	data   *image.RGBA
 }
 
 // Font is a loaded font. It is backed either by a bitmap BDF font (font != nil)
