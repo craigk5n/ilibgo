@@ -179,10 +179,14 @@ var helvR24BDF []byte
 ```
 and parse at init/first-use. This removes the codegen step entirely, shrinks the source tree, compiles faster, and keeps fonts in their canonical format. `bdftogo` can stay as an optional tool for users who want pre-baked fonts.
 
-### 6.2 Consider splitting bundled fonts into a sub-package or separate module
+### 6.2 Consider splitting bundled fonts into a sub-package or separate module — ✅ DONE (already satisfied)
+**Verified.** The root `ilibgo` package imports no font sub-package — the bundled fonts already live in opt-in per-foundry packages (`fonts/adobe_100dpi`, etc.) that a caller imports explicitly. Importing the root library does not pull in any embedded font table, so binaries that never draw text carry no font weight. Original note below.
+
 The embedded font tables bloat every binary that imports the root package even if it never draws text. A `ilibgo/fonts` sub-module (or build-tagged inclusion) lets callers opt in.
 
-### 6.3 Parse BDF more robustly
+### 6.3 Parse BDF more robustly — ✅ DONE
+**Implemented.** The parser now identifies each line by its leading keyword via `strings.Fields`/`strings.Cut` instead of slicing at fixed byte offsets, so extra whitespace and short/truncated lines no longer panic. The bitmap-row unpacking guards every index, handles upper- and lower-case hex, and skips non-hex bytes. BBX dimensions are bounds-checked (rejecting negative and absurdly large boxes, which previously could trigger a huge `make([]bool, w*h)` allocation — a DoS). Added `FuzzLoadFontFromBytes` (IDEAS §3.2) which runs clean with no crashers. Original note below.
+
 The parser uses fixed substring offsets (`line[10:]`, `line[12:]`, etc.) and assumes field positions. Switch to `strings.Fields`/`strings.Cut` keyed on the keyword — resilient to extra whitespace and safer against panics on short lines. Pair with the fuzz test in §3.2.
 
 ---

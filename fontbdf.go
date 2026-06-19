@@ -7,8 +7,12 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	"unicode"
 )
+
+// maxGlyphDim bounds a single glyph's bounding-box width/height. Real BDF
+// glyphs are at most a few hundred pixels; this cap rejects malformed files
+// that would otherwise request an enormous bitmap allocation.
+const maxGlyphDim = 4096
 
 // TODO: support these translations
 var charTranslations map[string]string = map[string]string{
@@ -119,6 +123,44 @@ func trimQuotes(s string) string {
 	return s
 }
 
+// bdfValue returns the text following the first keyword token on a BDF line,
+// trimmed of surrounding whitespace. For `FONT_ASCENT 12` it returns "12"; for
+// `FACE_NAME "Helvetica Bold"` it returns `"Helvetica Bold"`. If the line has
+// no value it returns "".
+func bdfValue(line string) string {
+	_, rest, found := strings.Cut(line, " ")
+	if !found {
+		return ""
+	}
+	return strings.TrimSpace(rest)
+}
+
+// atoiOrZero parses a base-10 integer, returning 0 when the token is not a
+// valid number. BDF integer fields are well-defined, so a parse failure means
+// a malformed file; treating it as zero keeps parsing panic-free.
+func atoiOrZero(s string) int {
+	n, err := strconv.Atoi(s)
+	if err != nil {
+		return 0
+	}
+	return n
+}
+
+// hexDigit converts a single hexadecimal digit (upper or lower case) to its
+// value, or returns -1 if r is not a hex digit. Used when unpacking BDF bitmap
+// rows.
+func hexDigit(r rune) int {
+	switch {
+	case r >= '0' && r <= '9':
+		return int(r - '0')
+	case r >= 'A' && r <= 'F':
+		return int(r-'A') + 10
+	case r >= 'a' && r <= 'f':
+		return int(r-'a') + 10
+	}
+	return -1
+}
+
 // Parse the array of string lines that represent the BDF font.
 // Example usage:
 // LoadFontFromData("timR12", font_timR12)
@@ -127,64 +169,87 @@ func LoadFontFromData(name string, lines []string) (*Font, error) {
 
 	var char BdfChar
 	inBitmap := false
-	xPos := 0
 	yPos := 0
 	for lineNo, line := range lines {
+		// Identify the line by its leading keyword token. Splitting on
+		// whitespace (rather than slicing at fixed byte offsets) tolerates
+		// extra spaces and short/truncated lines without panicking.
+		fields := strings.Fields(line)
+		keyword := ""
+		if len(fields) > 0 {
+			keyword = fields[0]
+		}
+
+		switch {
 		// Examples: "STARTCHAR W" or "STARTCHAR space"
-		if strings.HasPrefix(line, "STARTCHAR") {
+		case keyword == "STARTCHAR":
 			char = BdfChar{}
-			char.name = line[10:]
+			char.name = bdfValue(line)
 			if val, contains := charTranslations[char.name]; contains {
 				// translate; e.g. replace "space" with " "
 				char.name = val
 			}
-		} else if strings.HasPrefix(line, "ENCODING") {
-			temp := trimQuotes(line[9:])
-			int1, err := strconv.ParseInt(temp, 10, 32)
-			if err == nil && int1 > 0 {
-				char.name = fmt.Sprintf("%c", int1)
+		case keyword == "ENCODING":
+			if len(fields) >= 2 {
+				int1, err := strconv.ParseInt(trimQuotes(fields[1]), 10, 32)
+				if err == nil && int1 > 0 {
+					char.name = fmt.Sprintf("%c", int1)
+				}
 			}
-		} else if strings.HasPrefix(line, "PIXEL_SIZE") {
-			temp := line[11:]
-			int1, err := strconv.ParseInt(temp, 10, 32)
-			if err == nil {
-				font.pixelSize = int(int1)
+		case keyword == "PIXEL_SIZE":
+			if len(fields) >= 2 {
+				if int1, err := strconv.ParseInt(fields[1], 10, 32); err == nil {
+					font.pixelSize = int(int1)
+				}
 			}
-		} else if strings.HasPrefix(line, "FONT_ASCENT") {
-			temp := line[12:]
-			int1, err := strconv.ParseInt(temp, 10, 32)
-			if err == nil {
-				font.fontAscent = int(int1)
+		case keyword == "FONT_ASCENT":
+			if len(fields) >= 2 {
+				if int1, err := strconv.ParseInt(fields[1], 10, 32); err == nil {
+					font.fontAscent = int(int1)
+				}
 			}
-		} else if strings.HasPrefix(line, "FONT_DESCENT") {
-			// "FONT_DESCENT" is one char longer than "FONT_ASCENT", so the
-			// fixed offset leaves a leading space; trim it before parsing.
-			temp := strings.TrimSpace(line[12:])
-			int1, err := strconv.ParseInt(temp, 10, 32)
-			if err == nil {
-				font.fontDescent = int(int1)
+		case keyword == "FONT_DESCENT":
+			if len(fields) >= 2 {
+				if int1, err := strconv.ParseInt(fields[1], 10, 32); err == nil {
+					font.fontDescent = int(int1)
+				}
 			}
-		} else if strings.HasPrefix(line, "SPACING") {
-			font.proportional = (line == "SPACING \"P\"")
-		} else if strings.HasPrefix(line, "FACE_NAME") { // "Times Italic", "Helvetica"
-			font.faceName = trimQuotes(line[10:])
-		} else if strings.HasPrefix(line, "SETWIDTH_NAME") { // "Normal"
-			font.widthName = trimQuotes(line[14:])
-		} else if strings.HasPrefix(line, "WEIGHT_NAME") { // "Medium"
-			font.weight = trimQuotes(line[12:])
-		} else if strings.HasPrefix(line, "SLANT") { // "R", "I"
-			font.slant = trimQuotes(line[6:])
-		} else if strings.HasPrefix(line, "BBX") {
-			fmt.Sscanf(line, "BBX %d %d %d %d", &char.width, &char.height, &char.xoffset, &char.yoffset)
+		case keyword == "SPACING":
+			if len(fields) >= 2 {
+				font.proportional = trimQuotes(fields[1]) == "P"
+			}
+		case keyword == "FACE_NAME": // "Times Italic", "Helvetica"
+			font.faceName = trimQuotes(bdfValue(line))
+		case keyword == "SETWIDTH_NAME": // "Normal"
+			font.widthName = trimQuotes(bdfValue(line))
+		case keyword == "WEIGHT_NAME": // "Medium"
+			font.weight = trimQuotes(bdfValue(line))
+		case keyword == "SLANT": // "R", "I"
+			font.slant = trimQuotes(bdfValue(line))
+		case keyword == "BBX":
+			// BBX bbw bbh bbxoff bbyoff
+			if len(fields) >= 5 {
+				char.width = atoiOrZero(fields[1])
+				char.height = atoiOrZero(fields[2])
+				char.xoffset = atoiOrZero(fields[3])
+				char.yoffset = atoiOrZero(fields[4])
+			}
+			// Reject nonsensical or absurdly large glyph boxes. Real BDF
+			// glyphs are tiny; bounding this prevents a malformed file from
+			// triggering a huge allocation (a DoS via make([]bool, w*h)).
+			if char.width < 0 || char.height < 0 || char.width > maxGlyphDim || char.height > maxGlyphDim {
+				return nil, fmt.Errorf("ilibgo: BDF parse: invalid BBX dimensions %dx%d at line %d", char.width, char.height, lineNo+1)
+			}
 			char.data = make([]bool, char.width*char.height)
-		} else if strings.HasPrefix(line, "DWIDTH") {
+		case keyword == "DWIDTH":
 			// BDF DWIDTH is "dwx0 dwy0"; we only use the horizontal advance.
-			fmt.Sscanf(line, "DWIDTH %d", &char.actualWidth)
-		} else if strings.HasPrefix(line, "BITMAP") {
+			if len(fields) >= 2 {
+				char.actualWidth = atoiOrZero(fields[1])
+			}
+		case keyword == "BITMAP":
 			inBitmap = true
-			xPos = 0
 			yPos = 0
-		} else if line == "ENDCHAR" {
+		case keyword == "ENDCHAR":
 			if inBitmap {
 				inBitmap = false
 				// Route by rune value: single-rune names with a code in the
@@ -203,32 +268,27 @@ func LoadFontFromData(name string, lines []string) (*Font, error) {
 				return nil, err
 			}
 			char = BdfChar{}
-		} else if inBitmap {
-			xPos = 0
-			for loop := 0; loop < char.width; loop++ {
-				r := []rune(line)
-				whichChar := loop / 4
-				c := r[whichChar]
-				var hexval int
-				if unicode.IsDigit(c) {
-					hexval = (int)(c - '0')
-				} else {
-					hexval = (int)(c-'A') + 10
+		case inBitmap:
+			// A bitmap row is one hex digit per 4 pixels. Guard every index so
+			// a truncated or malformed row can't panic.
+			row := []rune(strings.TrimSpace(line))
+			for x := 0; x < char.width && yPos < char.height; x++ {
+				whichChar := x / 4
+				if whichChar >= len(row) {
+					break
 				}
-				whichBit := 3 - (loop % 4)
-				if hexval&(1<<whichBit) > 0 {
-					char.data[yPos*char.width+xPos] = true
-					//fmt.Print("X")
-				} else {
-					char.data[yPos*char.width+xPos] = false
-					//fmt.Print(" ")
+				hexval := hexDigit(row[whichChar])
+				if hexval < 0 {
+					continue
 				}
-				xPos++
+				whichBit := 3 - (x % 4)
+				idx := yPos*char.width + x
+				if idx >= 0 && idx < len(char.data) {
+					char.data[idx] = hexval&(1<<whichBit) > 0
+				}
 			}
-			//fmt.Println("")
 			yPos++
 		}
-
 	}
 
 	ret := Font{name: name, font: &font}
