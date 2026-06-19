@@ -210,7 +210,9 @@ Small programs that showcase the library and/or are useful on their own. Each is
 - **Golden-image CI check** — render a known scene, diff against a committed PNG hash to catch visual regressions.
 - **Benchmarks** (`go test -bench`) — fills, `CopyImageScaled`, flood fill, fractal; anchor the perf claims from the `draw.Draw` work.
 
-## 9. Scalable / TrueType font support
+## 9. Scalable / TrueType font support — ✅ DONE (basic)
+
+**Implemented.** `LoadTrueTypeFromBytes` / `LoadTrueTypeFromFile` build a `Font` rasterized at a given point size via `golang.org/x/image/font/opentype` (no new external dependency — `x/image` was already required; this also pulled in `x/text` indirectly). A TrueType `Font` flows through the existing `SetFont`/`DrawString`/`TextDimensions` API: it renders **anti-aliased** horizontal text and supports the etched/shadowed `TextStyle`s. The `truetype` example tool demonstrates it (built-in Go font by default). **Not** done: arbitrary-angle rotation for TrueType (`DrawStringRotatedAngle` falls back to horizontal) — that remains BDF-only, as noted below. Original analysis follows.
 
 Feasible, medium effort for basic support; high effort for full feature parity. Notes:
 

@@ -24,6 +24,7 @@ import (
 
 	"github.com/lmittmann/ppm"
 	"golang.org/x/image/bmp"
+	"golang.org/x/image/font"
 	"golang.org/x/image/tiff"
 
 	"os"
@@ -63,11 +64,17 @@ type Image struct {
 	data     *image.RGBA
 }
 
+// Font is a loaded font. It is backed either by a bitmap BDF font (font != nil)
+// or by a scalable TrueType/OpenType face at a fixed size (face != nil).
 type Font struct {
-	name string
-	font *BdfFont
-	// Add additional support font types (truetype, etc.) here
+	name   string
+	font   *BdfFont  // BDF bitmap font (nil for TrueType)
+	face   font.Face // TrueType/OpenType face (nil for BDF)
+	height int       // cached pixel line height for face fonts
 }
+
+// isTrueType reports whether the font is backed by a scalable face.
+func (f *Font) isTrueType() bool { return f != nil && f.face != nil }
 
 type GraphicsContext struct {
 	foreground Color

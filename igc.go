@@ -44,9 +44,14 @@ func SetFont(gc *GraphicsContext, font *Font) {
 }
 
 func GetFontSize(font *Font) (height int, err error) {
-	if font == nil || font.font == nil {
+	if font == nil {
 		return 0, errors.New("font is nil")
 	}
-	// Only support BDF fonts for now.
+	if font.isTrueType() {
+		return font.height, nil
+	}
+	if font.font == nil {
+		return 0, errors.New("font is nil")
+	}
 	return font.font.pixelSize, nil
 }

@@ -50,6 +50,9 @@ func TextDimensions(gc GraphicsContext, font *Font, text string) (width int, hei
 	if font == nil {
 		return 0, 0, errors.New("no font set")
 	}
+	if font.isTrueType() {
+		return font.measureTrueType(text)
+	}
 	fontHeight, _ := GetFontSize(font)
 	retHeight = fontHeight
 	for _, char := range text {
@@ -149,10 +152,22 @@ func (image *Image) DrawStringRotated(gc GraphicsContext, x int, y int, text str
 	var top, bottom Color
 	var fontHeight int
 
+	// glyphs draws the text at (gx, gy) in the current foreground, dispatching
+	// to the BDF or TrueType renderer. TrueType is rendered horizontally
+	// regardless of direction.
+	isTT := gc.font.isTrueType()
+	glyphs := func(g GraphicsContext, gx, gy int) {
+		if isTT {
+			image.drawTrueTypeGlyphs(g, gx, gy, text)
+		} else {
+			drawStringRotated90(image, g, gx, gy, text, direction)
+		}
+	}
+
 	origFg := gc.foreground
 	switch gc.textStyle {
 	case TextNormal:
-		drawStringRotated90(image, gc, x, y, text, direction)
+		glyphs(gc, x, y)
 	case TextEtchedIn, TextEtchedOut:
 		if gc.textStyle == TextEtchedOut {
 			top, bottom = makeTopAndBottomShadow(gc.background)
@@ -160,11 +175,11 @@ func (image *Image) DrawStringRotated(gc GraphicsContext, x int, y int, text str
 			top, bottom = makeTopAndBottomShadow(gc.background)
 		}
 		SetForeground(&gc, top)
-		drawStringRotated90(image, gc, x-1, y-1, text, direction)
+		glyphs(gc, x-1, y-1)
 		SetForeground(&gc, bottom)
-		drawStringRotated90(image, gc, x+1, y+1, text, direction)
+		glyphs(gc, x+1, y+1)
 		gc.foreground = gc.background
-		drawStringRotated90(image, gc, x, y, text, direction)
+		glyphs(gc, x, y)
 	case TextShadowed:
 		fontHeight, _ = GetFontSize(gc.font)
 		nshadows := fontHeight / 5
@@ -172,10 +187,10 @@ func (image *Image) DrawStringRotated(gc GraphicsContext, x int, y int, text str
 		gc.foreground = origFg
 		for loop := nshadows; loop > 0; loop-- {
 			SetForeground(&gc, shadows[loop-1])
-			drawStringRotated90(image, gc, x+loop, y+loop, text, direction)
+			glyphs(gc, x+loop, y+loop)
 		}
 		gc.foreground = origFg
-		drawStringRotated90(image, gc, x, y, text, direction)
+		glyphs(gc, x, y)
 	}
 }
 
@@ -267,6 +282,13 @@ func drawStringRotated90(image *Image, gc GraphicsContext, x int, y int, text st
 }
 
 func (image *Image) DrawStringRotatedAngle(gc GraphicsContext, x int, y int, text string, angle float64) {
+	// Arbitrary-angle rotation is only supported for BDF bitmap fonts; a
+	// TrueType font is drawn horizontally.
+	if gc.font.isTrueType() {
+		image.drawTrueTypeGlyphs(gc, x, y, text)
+		return
+	}
+
 	var bdfChar *BdfChar
 	var myx, myy int
 	charNum := 0
