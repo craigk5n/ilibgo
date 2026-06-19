@@ -282,10 +282,10 @@ func drawStringRotated90(image *Image, gc GraphicsContext, x int, y int, text st
 }
 
 func (image *Image) DrawStringRotatedAngle(gc GraphicsContext, x int, y int, text string, angle float64) {
-	// Arbitrary-angle rotation is only supported for BDF bitmap fonts; a
-	// TrueType font is drawn horizontally.
+	// TrueType fonts rotate by rasterizing horizontally and affine-transforming
+	// the result; BDF fonts rotate per-pixel below.
 	if gc.font.isTrueType() {
-		image.drawTrueTypeGlyphs(gc, x, y, text)
+		image.drawTrueTypeGlyphsRotated(gc, x, y, text, angle)
 		return
 	}
 

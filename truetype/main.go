@@ -11,12 +11,14 @@
 //	  -text string    text to render (default "Hello, ilibgo!")
 //	  -color string   text color name (default "black")
 //	  -style string   normal, shadowed, etched-in, or etched-out (default "normal")
+//	  -angle float    rotation angle in degrees, counterclockwise (default 0)
 //	  -out string     output PNG file (default "truetype.png")
 package main
 
 import (
 	"flag"
 	"fmt"
+	"math"
 	"os"
 
 	"github.com/craigk5n/ilibgo"
@@ -29,6 +31,7 @@ func main() {
 	text := flag.String("text", "Hello, ilibgo!", "text to render")
 	colorName := flag.String("color", "black", "text color name")
 	style := flag.String("style", "normal", "normal, shadowed, etched-in, or etched-out")
+	angle := flag.Float64("angle", 0, "rotation angle in degrees (counterclockwise)")
 	out := flag.String("out", "truetype.png", "output PNG file")
 	flag.Parse()
 
@@ -52,11 +55,21 @@ func main() {
 
 	w, h, _ := ilibgo.TextDimensions(gc, font, *text)
 	margin := int(*size / 3)
-	img := ilibgo.CreateImageWithBackground(w+2*margin, h+2*margin, mustColor("white"))
 
-	// y is the text baseline; sit it within the top margin plus the ascent.
-	baseline := margin + h*4/5
-	img.DrawString(gc, margin, baseline, *text)
+	var img *ilibgo.Image
+	if *angle == 0 {
+		img = ilibgo.CreateImageWithBackground(w+2*margin, h+2*margin, mustColor("white"))
+		// y is the text baseline; sit it within the top margin plus the ascent.
+		baseline := margin + h*4/5
+		img.DrawString(gc, margin, baseline, *text)
+	} else {
+		// Rotated text fans out from a pivot; use a square canvas big enough to
+		// hold the rotation and pivot about its center.
+		diag := int(math.Hypot(float64(w), float64(h)))
+		side := 2*diag + 2*margin
+		img = ilibgo.CreateImageWithBackground(side, side, mustColor("white"))
+		img.DrawStringRotatedAngle(gc, side/2, side/2, *text, *angle)
+	}
 
 	f, err := os.Create(*out)
 	if err != nil {

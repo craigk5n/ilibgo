@@ -226,9 +226,9 @@ Small programs that showcase the library and/or are useful on their own. Each is
 - **Golden-image CI check** ✅ — `golden_test.go` renders a fixed scene using only deterministic integer ops (fills, straight lines, BDF text) and compares a SHA-256 of the pixels against a committed hash, catching visual regressions.
 - **Benchmarks** ✅ — `bench_test.go` benchmarks `FillRectangle`, nearest vs CatmullRom scaling, `FloodFill`, and per-pixel `SetPoint` fills.
 
-## 9. Scalable / TrueType font support — ✅ DONE (basic)
+## 9. Scalable / TrueType font support — ✅ DONE
 
-**Implemented.** `LoadTrueTypeFromBytes` / `LoadTrueTypeFromFile` build a `Font` rasterized at a given point size via `golang.org/x/image/font/opentype` (no new external dependency — `x/image` was already required; this also pulled in `x/text` indirectly). A TrueType `Font` flows through the existing `SetFont`/`DrawString`/`TextDimensions` API: it renders **anti-aliased** horizontal text and supports the etched/shadowed `TextStyle`s. The `truetype` example tool demonstrates it (built-in Go font by default). **Not** done: arbitrary-angle rotation for TrueType (`DrawStringRotatedAngle` falls back to horizontal) — that remains BDF-only, as noted below. Original analysis follows.
+**Implemented.** `LoadTrueTypeFromBytes` / `LoadTrueTypeFromFile` build a `Font` rasterized at a given point size via `golang.org/x/image/font/opentype` (no new external dependency — `x/image` was already required; this also pulled in `x/text` indirectly). A TrueType `Font` flows through the existing `SetFont`/`DrawString`/`TextDimensions` API: it renders **anti-aliased** text and supports the etched/shadowed `TextStyle`s. **Arbitrary-angle rotation now works for TrueType too** (§9 follow-up done): `DrawStringRotatedAngle` rasterizes the glyphs horizontally onto a transparent scratch image, then affine-transforms (rotates) that image onto the destination with bilinear sampling via `golang.org/x/image/draw`, using the same rotation convention as the BDF path. The `truetype` example tool gained an `-angle` flag to demonstrate it. Original analysis follows.
 
 Feasible, medium effort for basic support; high effort for full feature parity. Notes:
 
