@@ -287,7 +287,7 @@ func AllocNamedColor(name string) (Color, error) {
 		return c, nil
 	} else {
 		c := NewColor(255, 255, 255, 255)
-		return c, fmt.Errorf("no such color'%s'", name)
+		return c, fmt.Errorf("ilibgo: no such color %q", name)
 	}
 }
 

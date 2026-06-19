@@ -1,6 +1,7 @@
 package ilibgo
 
 import (
+	"fmt"
 	"math"
 )
 
@@ -17,6 +18,9 @@ import (
 
 // Draw an arc.  Both arc1 and arc2 are in degrees from 0 to 360.
 func (image *Image) DrawArc(gc GraphicsContext, x int, y int, r1 int, r2 int, a1 float64, a2 float64) error {
+	if r1 < 0 || r2 < 0 {
+		return fmt.Errorf("ilibgo: DrawArc: negative radius (r1=%d, r2=%d)", r1, r2)
+	}
 	var myx, myy, lastx, lasty, N, loop int
 
 	/* because our y is upside down, make all angles their negative */
@@ -41,6 +45,9 @@ func (image *Image) DrawArc(gc GraphicsContext, x int, y int, r1 int, r2 int, a1
 
 // Draw an arc and connect it to the center point.
 func (image *Image) DrawEnclosedArc(gc GraphicsContext, x int, y int, r1 int, r2 int, a1 float64, a2 float64) error {
+	if r1 < 0 || r2 < 0 {
+		return fmt.Errorf("ilibgo: DrawEnclosedArc: negative radius (r1=%d, r2=%d)", r1, r2)
+	}
 	// because our y is upside down, make all angles their negative
 	a1 = 360 - a1
 	a2 = 360 - a2
@@ -68,6 +75,9 @@ func (image *Image) DrawEnclosedArc(gc GraphicsContext, x int, y int, r1 int, r2
 
 // Fill an arc
 func (image *Image) FillArc(gc GraphicsContext, x int, y int, r1 int, r2 int, a1 float64, a2 float64) error {
+	if r1 < 0 || r2 < 0 {
+		return fmt.Errorf("ilibgo: FillArc: negative radius (r1=%d, r2=%d)", r1, r2)
+	}
 	var points []Point = make([]Point, 0)
 
 	// because our y is upside down, make all angles their negative
@@ -90,10 +100,6 @@ func (image *Image) FillArc(gc GraphicsContext, x int, y int, r1 int, r2 int, a1
 		p.X = x
 		p.Y = y
 		points = append(points, p)
-		image.FillPolygon(gc, points)
-	} else {
-		image.FillPolygon(gc, points)
 	}
-
-	return nil
+	return image.FillPolygon(gc, points)
 }

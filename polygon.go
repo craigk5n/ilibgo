@@ -1,5 +1,7 @@
 package ilibgo
 
+import "fmt"
+
 // History:
 // 08-Jul-2022	Craig Knudsen craig@k5n.us
 //            	Converted from C to Go
@@ -55,6 +57,9 @@ func getIntersectionXValue(line lineType, yval int) int {
 }
 
 func (image *Image) DrawPolygon(gc GraphicsContext, points []Point) error {
+	if len(points) < 2 {
+		return fmt.Errorf("ilibgo: DrawPolygon: need at least 2 points, got %d", len(points))
+	}
 	for loop := 1; loop < len(points); loop++ {
 		image.DrawLine(gc, points[loop-1].X, points[loop-1].Y,
 			points[loop].X, points[loop].Y)
@@ -65,6 +70,9 @@ func (image *Image) DrawPolygon(gc GraphicsContext, points []Point) error {
 
 // Fill a polygonn
 func (image *Image) FillPolygon(gc GraphicsContext, points []Point) error {
+	if len(points) < 3 {
+		return fmt.Errorf("ilibgo: FillPolygon: need at least 3 points, got %d", len(points))
+	}
 	gc.lineWidth = 1
 
 	// create an array of lines

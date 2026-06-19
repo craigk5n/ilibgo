@@ -93,16 +93,16 @@ func FloodFill(img *Image, gc GraphicsContext, x int, y int) error {
 // --- Copy ---
 
 // Deprecated: use (*Image).CopyImage on the destination image.
-func CopyImage(source *Image, dest *Image, gc GraphicsContext, src_x int, src_y int, width int, height int,
-	dest_x int, dest_y int) error {
-	return dest.CopyImage(source, gc, src_x, src_y, width, height, dest_x, dest_y)
+func CopyImage(source *Image, dest *Image, gc GraphicsContext, srcX int, srcY int, width int, height int,
+	destX int, destY int) error {
+	return dest.CopyImage(source, gc, srcX, srcY, width, height, destX, destY)
 }
 
 // Deprecated: use (*Image).CopyImageScaled on the destination image.
 func CopyImageScaled(source *Image, dest *Image,
-	src_x int, src_y int, src_width int, src_height int,
-	dest_x int, dest_y int, dest_width int, dest_height int) error {
-	return dest.CopyImageScaled(source, src_x, src_y, src_width, src_height, dest_x, dest_y, dest_width, dest_height)
+	srcX int, srcY int, srcWidth int, srcHeight int,
+	destX int, destY int, destWidth int, destHeight int) error {
+	return dest.CopyImageScaled(source, srcX, srcY, srcWidth, srcHeight, destX, destY, destWidth, destHeight)
 }
 
 // --- Text ---
