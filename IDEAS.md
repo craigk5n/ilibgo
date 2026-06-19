@@ -2,6 +2,22 @@
 
 Recommendations for bringing `ilibgo` in line with Go best practices for an image library. Grounded in a read of the current source (ported from the original C `ilib`). Ordered roughly by impact. Each item notes concrete locations.
 
+## Status (as of 2026-06-19)
+
+Essentially every recommendation below has been implemented. Completed:
+
+- **§1 correctness bugs** — all of §1.1–§1.9 fixed (encoder errors captured and returned via `Encode`; file ownership clarified with `Encode`/`Decode` + `SaveImageFile`/`LoadImageFile`; arc trig fixed; `DrawStringRotatedAngle` rune-walks correctly; BDF `SLANT`/`DWIDTH`/duplicate-`PIXEL_SIZE` fixed; `FillPolygon` debug sentinel removed; `FloodFill` reimplemented as an iterative scanline stack).
+- **§2 API** — §2.1 (`Point`/`Color` constructible: `Pt`, `NewColor`, `AllocColor`), §2.2 (method-style API), §2.3 (dropped `I` prefix), §2.4 (input validation + meaningful errors), §2.6 (error-string polish) done. §2.5 (GraphicsContext value-vs-pointer) is **resolved by convention**: the GC is passed by value to draw methods, mutated only through the `Set*` setters, and this is documented in CLAUDE.md — kept as-is rather than reworked into a builder.
+- **§3 tooling** — §3.1 (Go 1.24), §3.2 (extensive tests + fuzz, ~99% coverage), §3.3 (CI + staticcheck/golangci-lint/gosec), §3.4 (`io.Reader`/`io.Writer`), §3.5 (camelCase params), §3.6 (runnable examples), §3.7 (dead field removed) done.
+- **§4 stdlib** — §4.1 (`image.Image`/`draw.Image` via `image_std.go`) and §4.2 (`draw.Draw` for fills/copies) done.
+- **§5 performance** — §5.1/§5.2 (fills and `CopyImage` via `draw.Draw`), §5.3 (`CopyImageScaledQuality`), §5.4 (iterative flood fill), §5.5 (incremental arc trig) done.
+- **§6 fonts** — §6.1 (`//go:embed`), §6.2 (font sub-packages, verified), §6.3 (robust keyword-keyed parser + fuzz) done.
+- **§8 examples** — all shipped: iconvert, chart, qr/qrgen, captcha, watermark, fontsheet, sparkline, montage, mandelbrot, iresize, barcode, bdfinfo, plus benchmarks and a golden-image regression test.
+- **§9 TrueType** — load + anti-aliased rendering + styles + arbitrary-angle rotation done.
+- **§10 QR** — generator done. The **decoder remains a deliberate non-goal** (it is a computer-vision task; `ilibgo` is about image creation/manipulation, not analysis).
+
+The detailed write-ups below are retained for history; each carries its own ✅ marker where applicable.
+
 ---
 
 ## 1. Correctness bugs (fix first)
