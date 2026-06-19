@@ -196,9 +196,10 @@ Small programs that showcase the library and/or are useful on their own. Each is
 - **`captcha`** ✅ — distorted-text CAPTCHA: per-char `DrawStringRotatedAngle` with random angle/jitter/color, noise lines (`DrawLine`) and speckle (`SetPoint`); prints the answer and is seedable for reproducibility.
 - **`watermark`** ✅ — tiled/centered semi-transparent text watermark, alpha-blended over a loaded image by reading pixels back via `Color.RGBA()` and mixing with `NewColor`. Exercises image round-trip + rotation + blending.
 
+- **`fontsheet`** ✅ — specimen catalog: a sample line drawn in each of a curated set of bundled fonts (families/styles/sizes), labeled and stacked, loaded straight from the embedded accessors; doubles as visual font QA.
+
 **Examples (showcase value):**
 - **`sparkline`** — tiny inline trend image from a number list; minimal "hello world" for the draw API.
-- **`fontsheet`** — render a full glyph specimen sheet for a bundled font by iterating the embedded `fonts.FS`; doubles as visual font QA.
 - **`mandelbrot`/fractal** — per-pixel `SetPoint`/`NewColor`; also a natural benchmark target.
 - **`montage`** — compose N images into a labeled grid (a configurable generalization of `thumbnails`).
 - **`iresize`** — scale an image via `CopyImageScaled` (good demo target for §5.3 quality scaling).
