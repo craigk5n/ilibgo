@@ -96,15 +96,63 @@ func TestTrueTypeStylesAndAngle(t *testing.T) {
 		}
 	}
 
-	// DrawStringRotatedAngle falls back to horizontal for TrueType (no panic).
+	// DrawStringRotatedAngle now genuinely rotates TrueType text. Verify by
+	// comparing the set-pixel bounding box of horizontal vs 90-degree text:
+	// horizontal text is wider than tall, rotated text is taller than wide.
 	gc := CreateGraphicsContext()
 	SetFont(&gc, f)
 	SetForeground(&gc, mustColor(t, "black"))
-	img := newWhiteImage(t, 200, 100)
-	img.DrawStringRotatedAngle(gc, 10, 50, "Angle", 30)
-	if countSet(img) == 0 {
-		t.Error("DrawStringRotatedAngle (TrueType) drew nothing")
+
+	imgH := newWhiteImage(t, 200, 200)
+	imgH.DrawStringRotatedAngle(gc, 60, 150, "Angle", 0)
+	hw, hh, okH := setBounds(imgH)
+	if !okH {
+		t.Fatal("horizontal TrueType rotation drew nothing")
 	}
+	if hw <= hh {
+		t.Errorf("horizontal text should be wider than tall, got %dx%d", hw, hh)
+	}
+
+	imgR := newWhiteImage(t, 200, 200)
+	imgR.DrawStringRotatedAngle(gc, 60, 150, "Angle", 90)
+	rw, rh, okR := setBounds(imgR)
+	if !okR {
+		t.Fatal("rotated TrueType rotation drew nothing")
+	}
+	if rh <= rw {
+		t.Errorf("90-degree text should be taller than wide, got %dx%d", rw, rh)
+	}
+}
+
+// setBounds returns the width and height of the bounding box of non-white
+// pixels, and whether any were found.
+func setBounds(img *Image) (w, h int, any bool) {
+	minX, minY := 1<<30, 1<<30
+	maxX, maxY := -1, -1
+	for y := 0; y < ImageHeight(img); y++ {
+		for x := 0; x < ImageWidth(img); x++ {
+			c := GetPoint(img, x, y).color
+			if c.R == 255 && c.G == 255 && c.B == 255 {
+				continue
+			}
+			if x < minX {
+				minX = x
+			}
+			if x > maxX {
+				maxX = x
+			}
+			if y < minY {
+				minY = y
+			}
+			if y > maxY {
+				maxY = y
+			}
+		}
+	}
+	if maxX < 0 {
+		return 0, 0, false
+	}
+	return maxX - minX, maxY - minY, true
 }
 
 func TestTrueTypeLoadFromFileAndDefaultDPI(t *testing.T) {

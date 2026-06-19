@@ -2,11 +2,14 @@ package ilibgo
 
 import (
 	"image"
+	"math"
 	"os"
 	"strings"
 
+	xdraw "golang.org/x/image/draw"
 	"golang.org/x/image/font"
 	"golang.org/x/image/font/opentype"
+	"golang.org/x/image/math/f64"
 	"golang.org/x/image/math/fixed"
 )
 
@@ -15,9 +18,10 @@ import (
 // TrueType is scalable, the size is baked into the returned Font; load again at
 // a different size to change it. A dpi of 0 defaults to 72 (so points == pixels).
 //
-// Unlike BDF fonts, a TrueType font renders anti-aliased and supports the
-// etched/shadowed text styles, but only horizontal text (no arbitrary-angle
-// rotation).
+// Unlike BDF fonts, a TrueType font renders anti-aliased. It supports the
+// etched/shadowed text styles and arbitrary-angle rotation via
+// DrawStringRotatedAngle (the glyphs are rasterized horizontally and then
+// affine-transformed).
 func LoadTrueTypeFromBytes(data []byte, name string, points float64, dpi float64) (*Font, error) {
 	if dpi <= 0 {
 		dpi = 72
@@ -66,6 +70,50 @@ func (img *Image) drawTrueTypeGlyphs(gc GraphicsContext, x int, y int, text stri
 		}
 		d.DrawString(line)
 	}
+}
+
+// drawTrueTypeGlyphsRotated renders text rotated by angle degrees about the
+// baseline-left origin (x, y). It first rasterizes the text horizontally onto a
+// transparent scratch image, then affine-transforms that image onto the
+// destination with bilinear sampling so the anti-aliased glyphs rotate
+// smoothly. The rotation matrix matches the BDF DrawStringRotatedAngle
+// convention.
+func (img *Image) drawTrueTypeGlyphsRotated(gc GraphicsContext, x int, y int, text string, angle float64) {
+	if gc.font == nil || gc.font.face == nil {
+		return
+	}
+
+	w, h, _ := gc.font.measureTrueType(text)
+	if w <= 0 || h <= 0 {
+		return
+	}
+	ascent := gc.font.face.Metrics().Ascent.Ceil()
+	lineH := gc.font.height
+
+	// Rasterize the text horizontally onto a transparent scratch image, with
+	// the first line's baseline at y = ascent.
+	scratch := image.NewRGBA(image.Rect(0, 0, w, h))
+	src := image.NewUniform(gc.foreground.color)
+	for i, line := range strings.Split(text, "\n") {
+		d := &font.Drawer{
+			Dst:  scratch,
+			Src:  src,
+			Face: gc.font.face,
+			Dot:  fixed.P(0, ascent+i*lineH),
+		}
+		d.DrawString(line)
+	}
+
+	// Rotate about the source baseline-left origin (0, ascent) and translate so
+	// that origin lands at (x, y) in the destination. Same orientation as the
+	// BDF renderer: dstX =  cos*sx + sin*sy + c, dstY = -sin*sx + cos*sy + f.
+	rad := angle * math.Pi / 180.0
+	cos, sin := math.Cos(rad), math.Sin(rad)
+	s2d := f64.Aff3{
+		cos, sin, float64(x) - sin*float64(ascent),
+		-sin, cos, float64(y) - cos*float64(ascent),
+	}
+	xdraw.BiLinear.Transform(img.data, s2d, scratch, scratch.Bounds(), xdraw.Over, nil)
 }
 
 // measureTrueType returns the pixel width and height of text in a TrueType
