@@ -4,8 +4,8 @@ type ImageFormat uint8
 
 const (
 	DefaultFormatString = "ppm"
-	IlibVersion         = "2.0"
-	IlibVersionDate     = "11 Aug 2022"
+	IlibVersion         = "2.1.0"
+	IlibVersionDate     = "20 Jun 2026"
 
 	FormatGIF       ImageFormat = 0
 	FormatPPM       ImageFormat = 1
