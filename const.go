@@ -55,3 +55,12 @@ const (
 	TextBottomToTop TextDirection = 2
 	TextTopToBottom TextDirection = 3
 )
+
+// BlendMode controls how a graphics context's foreground color is composited
+// onto the destination image (see SetBlendMode).
+type BlendMode int
+
+const (
+	BlendReplace BlendMode = 0 // overwrite the destination pixel (default)
+	BlendOver    BlendMode = 1 // source-over alpha compositing
+)

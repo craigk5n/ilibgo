@@ -29,10 +29,17 @@ go run ./bdftogo -infile X.bdf -package mypkg   # convert BDF font -> embeddable
 The root directory is the `ilibgo` library package. Each source file holds one concern:
 
 - **`ilib.go`** — core types and file I/O. Defines `Image`, `Color`, `Font`, `GraphicsContext`, `Point`, `ImageOption`; `CreateImage`/`CreateImageWithBackground`; format detection (`FormatStringToType`, `FileType`, `IsSupportedFormat`). I/O is layered: `Encode(io.Writer, …)`/`Decode(io.Reader)` are the streaming core (usable with `bytes.Buffer`, HTTP bodies, etc.); `WriteImageFile`/`ReadImageFile` are thin wrappers over them that take any `io.Writer`/`io.Reader` (an `*os.File` still satisfies these); `SaveImageFile(path, …)`/`LoadImageFile(path)` open/close the file for you (`SaveImageFile` joins the encode and close errors). Reading uses Go's `image.Decode` (any registered format); writing supports PNG, JPEG, GIF, BMP, TIFF, PPM (PGM/PBM/XPM are stubbed and return errors).
-- **`const.go`** — enums/constants: `ImageFormat`, `LineStyle`, `FillStyle`, `TextStyle`, `TextDirection`, and version info.
-- **`igc.go`** — `GraphicsContext` (GC) construction and setters (`CreateGraphicsContext`, `SetForeground`, `SetBackground`, `SetFont`, `SetLineWidth`, `SetLineStyle`, `SetTextStyle`).
-- **`color.go`** — `AllocColor(r,g,b)` and `AllocNamedColor(name)` backed by an embedded X11 `rgb.txt` color map.
-- **Drawing primitives** — `point.go`, `line.go`, `arc.go` (arcs/ellipses), `circle.go`, `rectangle.go`, `polygon.go`, `flood.go`, `copy.go` (`CopyImage`, `CopyImageScaled`).
+- **`const.go`** — enums/constants: `ImageFormat`, `LineStyle`, `FillStyle`, `TextStyle`, `TextDirection`, `BlendMode` (`BlendReplace`/`BlendOver`), and version info.
+- **`igc.go`** — `GraphicsContext` (GC) construction and setters (`CreateGraphicsContext`, `SetForeground`, `SetBackground`, `SetFont`, `SetLineWidth`, `SetLineStyle`, `SetTextStyle`, `SetBlendMode`, `SetAntiAlias`, `SetAntiAliasedFont`).
+- **`color.go`** — `AllocColor(r,g,b)`, `AllocColorAlpha(r,g,b,a)`, and `AllocNamedColor(name)` backed by an embedded X11 `rgb.txt` color map.
+- **`render.go`** — low-level blend-aware pixel core (`drawPoint`, `blendPoint`), ported from the C `_ISetPoint`/`_IDrawPoint`/`_IBlendPoint`. `Pix` is treated as straight (non-premultiplied) RGBA; `blendPoint` does straight-alpha source-over with fractional edge coverage.
+- **`pixel.go`** — explicit per-pixel access (`SetPixel`/`GetPixel`/`SetPixelAlpha`/`GetPixelAlpha`), components in [0,255], always overwrite (no GC, no blend). Ports `IPixel.c`.
+- **`metadata.go`** — image-level metadata/operations: `DuplicateImage` (deep copy), `SetComment`/`GetComment`, `SetTransparent`/`GetTransparent`. Ports `IImage.c`.
+- **`quantize.go`** — `ReduceColors(max)` median-cut color reduction over the RGB channels (alpha preserved). Ports `IQuantize.c`.
+- **`arcprops.go`** — `ArcProperties` geometry helper returning the arc's start/end/mid coordinates (`ArcPoints`). Ports `IArcProp.c`.
+- **`curve.go`** — `DrawBezier` (cubic Bezier chain) and `DrawSpline` (Catmull-Rom), flattened to `DrawLine` segments. Ports `IDrawCurve.c`.
+- **`aa.go`** — anti-aliased rasterizers used when `SetAntiAlias(&gc, true)`: Xiaolin Wu lines, Wu/implicit-distance circle/ellipse/arc outlines, and supersampled ellipse/arc/polygon fills. All composite via `blendPoint`. Ports the AA paths of `IDrawLin.c`/`IDrawArc.c`/`IFillArc.c`/`IFillPol.c`.
+- **Drawing primitives** — `point.go`, `line.go`, `arc.go` (arcs/ellipses), `circle.go`, `rectangle.go`, `polygon.go`, `flood.go`, `copy.go` (`CopyImage`, `CopyImageScaled`). The line/arc/fill primitives dispatch to the `aa.go` rasterizers when GC anti-aliasing is on, and honor the GC `BlendMode` via `render.go`.
 - **`text.go`** — text rendering: `DrawString`, `DrawStringRotated` (left-to-right / top-to-bottom / bottom-to-top), `DrawStringRotatedAngle`, and `TextDimensions`/`TextWidth`/`TextHeight`. Implements the `TextStyle` effects (etched/shadowed).
 - **`fontbdf.go`** — BDF font parser. `LoadFontFromFile(path, name)` reads a `.bdf` file; `LoadFontFromBytes(name, data)` parses raw bytes (used by the embedded fonts); `LoadFontFromData(name, lines)` parses already-split lines (the shared core). Lines are keyword-keyed (`strings.Fields`/`Cut`), bounds-checked, and fuzzed (`fontbdf_fuzz_test.go`). ASCII chars are indexed into a `[256]BdfChar` array; non-ASCII go into `otherChars`.
 - **`fontinfo.go`** — read-only `Font` metadata accessors (`Name`, `Foundry`, `Family`, `FaceName`, `Slant`, `Weight`, `Proportional`, `PixelSize`, `Ascent`, `Descent`, `GlyphCount`, `IsTrueType`), all nil-safe. Used by the `bdfinfo` tool.
@@ -49,8 +56,18 @@ The root directory is the `ilibgo` library package. Each source file holds one c
 
 `fonts/` holds the bundled BDF fonts as canonical `.bdf` files, grouped by foundry (`adobe_100dpi`, `adobe_utopia_100dpi`, `bh_lucidatypewriter_100dpi`). Each foundry is its own Go package: an `embed.go` embeds that directory's `*.bdf` via `//go:embed` and exposes a private `lines()` helper, and one small wrapper file per font keeps the existing accessor API — `font.Font_helvR24()` still returns `[]string`, now read from the embedded file. Pass that to `LoadFontFromData`, or load any `.bdf` at runtime with `LoadFontFromFile` / from bytes with `LoadFontFromBytes`. The `bdftogo` tool remains available for users who prefer to bake their own fonts into Go `[]string` source, but it is no longer part of this repo's build.
 
+### Blend modes & anti-aliasing
+
+- **Blend mode.** `SetBlendMode(&gc, BlendOver)` makes the point/line/fill primitives composite the foreground over the destination using its alpha (straight-alpha source-over). The default `BlendReplace` overwrites pixels (the historical behavior, and the fast path for `FillRectangle`). Compositing goes through `render.go`'s `blendPoint`.
+- **Anti-aliasing.** `SetAntiAlias(&gc, true)` turns on anti-aliased rendering for thin solid lines (Xiaolin Wu), circle/ellipse/arc outlines, and ellipse/arc/polygon fills (`aa.go`). Anti-aliased primitives always blend (they need fractional coverage), regardless of blend mode. Thick (>1) or dashed lines fall back to the integer rasterizer.
+- **Anti-aliased fonts.** `SetAntiAliasedFont(&gc, font)` sets the font and records the request, but — matching the C library — the BDF text path does not act on the flag (the C `IDrawStr.c` never reads it); TrueType fonts always render anti-aliased.
+
+### Intentional deviation from the C library
+
+- **No separate greyscale storage.** The C library has an `IOPTION_GREYSCALE` 1-channel storage mode. Go's `Image` is always backed by `image.RGBA`, so greyscale is not a distinct storage format here; equivalent visual results are produced in RGBA, and `ReduceColors`/encoders still work. This is the one place the Go port deliberately diverges from C feature parity.
+
 ## Notes
 
-- There are currently **no `_test.go` files** in this repo.
+- Tests live alongside the code (`*_test.go`); `parity_test.go` covers the C-parity additions (pixels, curves, blend, anti-aliasing, quantization, metadata). Run `go test -race -cover ./...`. The `golden_test.go` hash guards the deterministic (non-AA, integer) primitives against unintended pixel changes.
 - Several features are stubbed/TODO: PGM/PBM/XPM writing, line widths > 3, dashed line styles, tiled/stippled fills, escape-sequence (non-ASCII named) character handling in text rendering.
 - `.gitignore` excludes generated output (`out.png`, `test.png`, `*.gif`, `*.ppm`).

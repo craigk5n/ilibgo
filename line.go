@@ -13,6 +13,13 @@ import (
 const onOffPixels float64 = 3.0
 
 func (image *Image) DrawLine(gc GraphicsContext, x1 int, y1 int, x2 int, y2 int) error {
+	// Anti-aliased path for thin solid lines (thick/dashed lines still use the
+	// integer rasterizer below).
+	if gc.antiAlias && gc.lineWidth <= 1 && gc.lineStyle == LineSolid {
+		image.drawLineAA(gc, x1, y1, x2, y2)
+		return nil
+	}
+
 	var myx, myy int
 	var slope, myslope, curx, cury float64
 	done := false

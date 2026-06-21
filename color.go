@@ -296,3 +296,11 @@ func AllocColor(red, green, blue uint8) (Color, error) {
 	c := NewColor(red, green, blue, 255)
 	return c, nil
 }
+
+// AllocColorAlpha allocates a color from RGBA values 0-255. This is the
+// parity-named counterpart of the C library's IAllocColorAlpha (equivalent to
+// NewColor, returning an error to match the AllocColor signature).
+func AllocColorAlpha(red, green, blue, alpha uint8) (Color, error) {
+	c := NewColor(red, green, blue, alpha)
+	return c, nil
+}

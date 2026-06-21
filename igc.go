@@ -11,6 +11,7 @@ func CreateGraphicsContext() GraphicsContext {
 	gc.lineWidth = 1
 	gc.lineStyle = LineSolid
 	gc.textStyle = TextNormal
+	gc.blendMode = BlendReplace
 
 	return gc
 }
@@ -41,6 +42,29 @@ func SetTextStyle(gc *GraphicsContext, textStyle TextStyle) {
 
 func SetFont(gc *GraphicsContext, font *Font) {
 	gc.font = font
+	gc.antiAliasedFont = false
+}
+
+// SetBlendMode sets the pixel compositing mode of a graphics context.
+// BlendReplace (the default) overwrites pixels; BlendOver composites the
+// foreground over the destination using the foreground's alpha.
+func SetBlendMode(gc *GraphicsContext, mode BlendMode) {
+	gc.blendMode = mode
+}
+
+// SetAntiAlias enables or disables anti-aliased rendering of drawing
+// primitives (thin solid lines, arcs, circles, ellipses, and fills).
+func SetAntiAlias(gc *GraphicsContext, on bool) {
+	gc.antiAlias = on
+}
+
+// SetAntiAliasedFont sets the graphics context's font and requests
+// anti-aliased rendering for it. For bitmap (BDF) fonts this is an
+// experimental smoothing of the glyph bitmap; TrueType fonts always render
+// anti-aliased. Equivalent to SetFont followed by enabling the flag.
+func SetAntiAliasedFont(gc *GraphicsContext, font *Font) {
+	gc.font = font
+	gc.antiAliasedFont = true
 }
 
 func GetFontSize(font *Font) (height int, err error) {
