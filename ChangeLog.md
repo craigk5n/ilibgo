@@ -1,5 +1,31 @@
 # Change Log
 
+### 20 Jun 2026
+  - Release 2.1.0
+    + Brought the Go port to feature parity with the upstream C `ilib` public
+      API. New drawing and image operations:
+        DrawBezier()      (cubic Bezier chains)
+        DrawSpline()      (Catmull-Rom splines)
+        FillEllipse()
+        ArcProperties()
+        SetPixel() / GetPixel() / SetPixelAlpha() / GetPixelAlpha()
+        AllocColorAlpha()
+        DuplicateImage()
+        SetComment() / GetComment()
+        SetTransparent() / GetTransparent()
+        ReduceColors()    (median-cut color quantization)
+    + Anti-aliasing: SetAntiAlias() enables anti-aliased thin solid lines
+      (Xiaolin Wu), circle/ellipse/arc outlines, and ellipse/arc/polygon fills.
+      SetAntiAliasedFont() is accepted for API parity (BDF ignores it, as in C;
+      TrueType is always anti-aliased).
+    + Compositing: SetBlendMode() selects BlendReplace (default, overwrite) or
+      BlendOver (source-over alpha blending) for the drawing primitives.
+    + Default rendering is unchanged; all new behavior is gated behind the new
+      graphics-context flags.
+    + Intentional deviation from C: Image is always backed by image.RGBA, so the
+      C IOPTION_GREYSCALE 1-channel storage mode is not reproduced.
+    + New example tools: primitives (anti-aliasing/curves/compositing showcase)
+      and reducecolors (palette-reduction before/after).
 ### 31 Aug 2022
   - Release 2.0.0
     + Converted from C to Go.  This includes almost all of the original C code.
