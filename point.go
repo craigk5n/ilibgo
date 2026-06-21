@@ -12,9 +12,11 @@ func (image *Image) DrawPoint(gc GraphicsContext, x int, y int) error {
 }
 
 // SetPoint sets the point at (x, y) using the graphics context's foreground
-// color.
+// color. The graphics context's blend mode is honored: BlendReplace (the
+// default) overwrites the pixel, while BlendOver composites the foreground
+// over the destination using its alpha.
 func (image *Image) SetPoint(gc GraphicsContext, x int, y int) error {
-	image.data.Set(x, y, gc.foreground.color)
+	image.drawPoint(gc, x, y)
 	return nil
 }
 

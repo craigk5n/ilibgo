@@ -63,6 +63,13 @@ type Image struct {
 	width  int
 	height int
 	data   *image.RGBA
+	// comments is an optional free-form text comment carried with the image
+	// (mirrors the C library's ISetComment/IGetComment).
+	comments string
+	// transparent, when non-nil, is the color treated as transparent by
+	// formats that support a single transparent color (mirrors C
+	// ISetTransparent/IGetTransparent).
+	transparent *Color
 }
 
 // Font is a loaded font. It is backed either by a bitmap BDF font (font != nil)
@@ -84,6 +91,11 @@ type GraphicsContext struct {
 	lineWidth  int
 	lineStyle  LineStyle
 	textStyle  TextStyle
+	blendMode  BlendMode // how foreground is composited (default BlendReplace)
+	antiAlias  bool      // anti-alias drawing primitives (lines, arcs, fills)
+	// antiAliasedFont requests anti-aliased rendering of bitmap (BDF) fonts.
+	// TrueType fonts always render anti-aliased regardless of this flag.
+	antiAliasedFont bool
 }
 
 // Check to see if the specified image format (as represented as the file suffix like "png")

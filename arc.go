@@ -21,6 +21,24 @@ func (image *Image) DrawArc(gc GraphicsContext, x int, y int, r1 int, r2 int, a1
 	if r1 < 0 || r2 < 0 {
 		return fmt.Errorf("ilibgo: DrawArc: negative radius (r1=%d, r2=%d)", r1, r2)
 	}
+
+	// Anti-aliased outlines: a full circle (Wu) or ellipse (implicit-distance),
+	// or a partial arc (implicit-distance restricted to its angular range).
+	if gc.antiAlias {
+		if math.Abs(a2-a1) >= 360.0 {
+			if r1 == r2 {
+				image.aaCircle(gc, x, y, r1)
+			} else {
+				image.aaEllipseOutline(gc, x, y, r1, r2)
+			}
+		} else {
+			ta1, ta2 := 360.0-a1, 360.0-a2
+			lo, hi := math.Min(ta1, ta2), math.Max(ta1, ta2)
+			image.aaArcOutline(gc, x, y, r1, r2, lo, hi)
+		}
+		return nil
+	}
+
 	var myx, myy, lastx, lasty, N, loop int
 
 	/* because our y is upside down, make all angles their negative */
@@ -86,6 +104,20 @@ func (image *Image) FillArc(gc GraphicsContext, x int, y int, r1 int, r2 int, a1
 	if r1 < 0 || r2 < 0 {
 		return fmt.Errorf("ilibgo: FillArc: negative radius (r1=%d, r2=%d)", r1, r2)
 	}
+
+	// Anti-aliased fills: a full ellipse/circle, or a partial arc as a smooth
+	// pie wedge (sector clipped by angle).
+	if gc.antiAlias {
+		if math.Abs(a2-a1) >= 359.9 {
+			image.fillEllipseAA(gc, x, y, r1, r2)
+		} else {
+			ta1, ta2 := 360.0-a1, 360.0-a2
+			lo, hi := math.Min(ta1, ta2), math.Max(ta1, ta2)
+			image.fillArcAA(gc, x, y, r1, r2, lo, hi)
+		}
+		return nil
+	}
+
 	points := make([]Point, 0)
 
 	// because our y is upside down, make all angles their negative

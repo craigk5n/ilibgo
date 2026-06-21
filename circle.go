@@ -10,11 +10,14 @@ func (image *Image) FillCircle(gc GraphicsContext, x int, y int, r int) error {
 	return image.FillArc(gc, x, y, r, r, 0.0, 360.0)
 }
 
-// DrawEllipse draws the outline of an ellipse with radii r1 and r2.
+// DrawEllipse draws the outline of an ellipse with radii r1 and r2. A single
+// full sweep is used so anti-aliased drawing uses the dedicated ellipse
+// rasterizer (the result is the same full ellipse either way).
 func (image *Image) DrawEllipse(gc GraphicsContext, x int, y int, r1 int, r2 int) error {
-	ret := image.DrawArc(gc, x, y, r1, r2, 0.0, 90.0)
-	if ret != nil {
-		return ret
-	}
-	return image.DrawArc(gc, x, y, r1, r2, 90.0, 360.0)
+	return image.DrawArc(gc, x, y, r1, r2, 0.0, 360.0)
+}
+
+// FillEllipse draws a filled ellipse with radii r1 and r2.
+func (image *Image) FillEllipse(gc GraphicsContext, x int, y int, r1 int, r2 int) error {
+	return image.FillArc(gc, x, y, r1, r2, 0.0, 360.0)
 }

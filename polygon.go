@@ -73,6 +73,15 @@ func (image *Image) FillPolygon(gc GraphicsContext, points []Point) error {
 	if len(points) < 3 {
 		return fmt.Errorf("ilibgo: FillPolygon: need at least 3 points, got %d", len(points))
 	}
+
+	// Anti-aliased fill (supersampled coverage). Handles convex or concave
+	// polygons; the aliased scanline path below is convex-only. FillCircle /
+	// FillEllipse / FillArc reach this through FillPolygon.
+	if gc.antiAlias {
+		image.fillPolygonAA(gc, points)
+		return nil
+	}
+
 	gc.lineWidth = 1
 
 	// create an array of lines

@@ -18,6 +18,21 @@ Essentially every recommendation below has been implemented. Completed:
 
 The detailed write-ups below are retained for history; each carries its own ✅ marker where applicable.
 
+## C feature parity (as of 2026-06-20)
+
+The upstream C `ilib` grew several capabilities that the Go port lacked. These are now ported, bringing `ilibgo` to functional parity with the C public API:
+
+- **Curves** — `DrawBezier` (cubic Bezier chain) and `DrawSpline` (Catmull-Rom), flattened to line segments (`curve.go`, from `IDrawCurve.c`).
+- **Shapes** — `FillEllipse` (`circle.go`); `ArcProperties` geometry helper returning start/end/mid coordinates (`arcprops.go`, from `IArcProp.c`). `DrawEllipse` is now a single full sweep so the AA path uses the dedicated ellipse rasterizer.
+- **Explicit pixels** — `SetPixel`/`GetPixel`/`SetPixelAlpha`/`GetPixelAlpha` (`pixel.go`, from `IPixel.c`).
+- **Color** — `AllocColorAlpha` (`color.go`).
+- **Image metadata/ops** — `DuplicateImage`, `SetComment`/`GetComment`, `SetTransparent`/`GetTransparent` (`metadata.go`, from `IImage.c`).
+- **Color reduction** — `ReduceColors` via median cut (`quantize.go`, from `IQuantize.c`).
+- **Blend modes** — `SetBlendMode(BlendReplace|BlendOver)`; the point/line/fill primitives composite via a shared `blendPoint` (`render.go`, from `_IBlendPoint`/`_ISetPoint`).
+- **Anti-aliasing** — `SetAntiAlias` enables Wu lines and supersampled/implicit-distance AA outlines and fills (`aa.go`, from the AA paths of `IDrawLin.c`/`IDrawArc.c`/`IFillArc.c`/`IFillPol.c`). `SetAntiAliasedFont` exists for API parity (BDF ignores it, as in C; TrueType is always AA).
+
+**Deliberate deviation:** the C `IOPTION_GREYSCALE` 1-channel storage mode is *not* reproduced — Go's `Image` is always `image.RGBA`. Equivalent visual results are produced in RGBA. This is the only intentional parity gap.
+
 ---
 
 ## 1. Correctness bugs (fix first)
