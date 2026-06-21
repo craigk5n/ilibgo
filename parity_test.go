@@ -308,6 +308,170 @@ func TestAntiAliasedCircleOutline(t *testing.T) {
 	}
 }
 
+func TestAntiAliasedEllipseOutline(t *testing.T) {
+	black, _ := AllocNamedColor("black")
+	img := newWhite(t, 60, 40)
+	gc := CreateGraphicsContext()
+	SetForeground(&gc, black)
+	SetAntiAlias(&gc, true)
+	// r1 != r2 routes through aaEllipseOutline / ellipseOutlineCoverage.
+	img.DrawEllipse(gc, 30, 20, 25, 12)
+	if !drawsSomething(img) {
+		t.Error("AA ellipse outline drew nothing")
+	}
+	if !hasIntermediateGray(img) {
+		t.Error("AA ellipse outline produced no gray pixels")
+	}
+}
+
+func TestAntiAliasedArcOutline(t *testing.T) {
+	black, _ := AllocNamedColor("black")
+	img := newWhite(t, 40, 40)
+	gc := CreateGraphicsContext()
+	SetForeground(&gc, black)
+	SetAntiAlias(&gc, true)
+	// Partial arc routes through aaArcOutline / arcAngleInRange.
+	img.DrawArc(gc, 20, 20, 15, 15, 0, 90)
+	if !drawsSomething(img) {
+		t.Error("AA arc outline drew nothing")
+	}
+}
+
+func TestAntiAliasedFillArc(t *testing.T) {
+	black, _ := AllocNamedColor("black")
+	img := newWhite(t, 40, 40)
+	gc := CreateGraphicsContext()
+	SetForeground(&gc, black)
+	SetAntiAlias(&gc, true)
+	// Partial fill arc routes through fillArcAA.
+	img.FillArc(gc, 20, 20, 15, 15, 0, 90)
+	if !drawsSomething(img) {
+		t.Error("AA fill arc drew nothing")
+	}
+	// The 0..90 wedge maps to the upper-right quadrant (image y points down),
+	// so a point up-and-right of center is well inside it.
+	if r, _, _, _ := img.GetPixel(24, 16); r != 0 {
+		t.Errorf("AA fill arc left an interior wedge point uncovered (R=%d)", r)
+	}
+}
+
+func TestAntiAliasedFillPolygon(t *testing.T) {
+	black, _ := AllocNamedColor("black")
+	img := newWhite(t, 40, 40)
+	gc := CreateGraphicsContext()
+	SetForeground(&gc, black)
+	SetAntiAlias(&gc, true)
+	// Triangle routes through fillPolygonAA / pointInPolygon.
+	tri := []Point{Pt(5, 35), Pt(20, 5), Pt(35, 35)}
+	img.FillPolygon(gc, tri)
+	if r, _, _, _ := img.GetPixel(20, 25); r != 0 {
+		t.Errorf("AA filled triangle interior R=%d, want 0", r)
+	}
+	if !hasIntermediateGray(img) {
+		t.Error("AA fill polygon produced no edge gray pixels")
+	}
+}
+
+func TestAntiAliasedLineSteepAndReversed(t *testing.T) {
+	black, _ := AllocNamedColor("black")
+	img := newWhite(t, 32, 32)
+	gc := CreateGraphicsContext()
+	SetForeground(&gc, black)
+	SetAntiAlias(&gc, true)
+	img.DrawLine(gc, 26, 2, 4, 30)  // steep (dy>dx) and x decreasing
+	img.DrawLine(gc, 16, 2, 16, 30) // vertical
+	if !hasIntermediateGray(img) && !drawsSomething(img) {
+		t.Error("steep AA lines drew nothing")
+	}
+}
+
+func TestFillRectangleBlendOver(t *testing.T) {
+	img := newWhite(t, 8, 8)
+	gc := CreateGraphicsContext()
+	half, _ := AllocColorAlpha(0, 0, 255, 128) // 50% blue
+	SetForeground(&gc, half)
+	SetBlendMode(&gc, BlendOver)
+	// Negative origin and oversize extent exercise the clip guards.
+	img.FillRectangle(gc, -2, -2, 6, 6)
+	r, g, b, a, _ := img.GetPixelAlpha(0, 0)
+	if a != 255 || b != 255 {
+		t.Errorf("blended rect (0,0) = (%d,%d,%d,%d), want full alpha, B=255", r, g, b, a)
+	}
+	if r < 110 || r > 140 {
+		t.Errorf("blended rect R=%d, want ~127 (50%% blue over white)", r)
+	}
+	// A pixel outside the clipped rect stays white.
+	if r, _, _, _ := img.GetPixel(7, 7); r != 255 {
+		t.Error("blended rect bled past its clipped extent")
+	}
+}
+
+func TestBlendPointEdges(t *testing.T) {
+	img := newWhite(t, 4, 4)
+	gc := CreateGraphicsContext()
+	SetBlendMode(&gc, BlendOver)
+
+	// Fully transparent foreground (sa==0): no change.
+	clear, _ := AllocColorAlpha(255, 0, 0, 0)
+	SetForeground(&gc, clear)
+	img.SetPoint(gc, 0, 0)
+	if r, _, _, _ := img.GetPixel(0, 0); r != 255 {
+		t.Error("blending a fully transparent color changed the pixel")
+	}
+
+	// Out-of-bounds blended draw: must be a silent no-op (no panic).
+	red, _ := AllocNamedColor("red")
+	SetForeground(&gc, red)
+	img.SetPoint(gc, -1, -1)
+	img.SetPoint(gc, 99, 99)
+}
+
+func TestCurveSamplesClamp(t *testing.T) {
+	// A very long Bezier exceeds the 4096-sample clamp; coordinates may run off
+	// the small image (DrawLine/blendPoint clip), which is fine.
+	img := newWhite(t, 8, 8)
+	gc := CreateGraphicsContext()
+	black, _ := AllocNamedColor("black")
+	SetForeground(&gc, black)
+	pts := []Point{Pt(0, 0), Pt(20000, 100), Pt(40000, 100), Pt(60000, 0)}
+	if err := img.DrawBezier(gc, pts); err != nil {
+		t.Fatalf("DrawBezier: %v", err)
+	}
+}
+
+func TestReduceColorsBlueGradient(t *testing.T) {
+	// A gradient where blue dominates the extent, forcing splits on the g/b
+	// axes during median cut.
+	img := CreateImage(16, 16)
+	for y := 0; y < 16; y++ {
+		for x := 0; x < 16; x++ {
+			img.SetPixel(x, y, 10, y*16, x*16)
+		}
+	}
+	if err := img.ReduceColors(6); err != nil {
+		t.Fatalf("ReduceColors: %v", err)
+	}
+	if !img.qWithinLimit(6) {
+		t.Error("after ReduceColors(6) image should have <= 6 colors")
+	}
+}
+
+func TestReduceColorsClampAndEmpty(t *testing.T) {
+	img := CreateImage(4, 4)
+	for y := 0; y < 4; y++ {
+		for x := 0; x < 4; x++ {
+			img.SetPixel(x, y, x*60, y*60, 0)
+		}
+	}
+	// maxColors below 1 is clamped up to 1.
+	if err := img.ReduceColors(0); err != nil {
+		t.Fatalf("ReduceColors(0): %v", err)
+	}
+	if !img.qWithinLimit(1) {
+		t.Error("ReduceColors(0) should clamp to a single color")
+	}
+}
+
 func TestSetters(t *testing.T) {
 	gc := CreateGraphicsContext()
 	if gc.blendMode != BlendReplace {

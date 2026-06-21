@@ -58,16 +58,10 @@ func (img *Image) blendPoint(gc GraphicsContext, x int, y int, cover uint32) {
 	// Straight-alpha source-over onto the RGBA destination.
 	da := uint32(pix[i+3])
 	dcontrib := div255(da * inv) // dst alpha contribution after (1-sa)
-	// oa = sa + round(da*(255-sa)/255) <= sa + (255-sa) = 255, so the uint8
-	// cast below never overflows.
+	// After the sa==0 early return above, sa >= 1, so oa = sa + dcontrib is in
+	// [1, 255]: it never reaches 0 (no divide-by-zero) and the uint8 cast of
+	// oa below never overflows.
 	oa := sa + dcontrib
-	if oa == 0 {
-		pix[i] = 0
-		pix[i+1] = 0
-		pix[i+2] = 0
-		pix[i+3] = 0
-		return
-	}
 	pix[i] = uint8((sr*sa + uint32(pix[i])*dcontrib + oa/2) / oa)
 	pix[i+1] = uint8((sg*sa + uint32(pix[i+1])*dcontrib + oa/2) / oa)
 	pix[i+2] = uint8((sb*sa + uint32(pix[i+2])*dcontrib + oa/2) / oa)
