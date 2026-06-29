@@ -4,5 +4,14 @@
 .vscode
 out.png
 test.png
-wordcloud.png
 coverage.out
+
+# wordcloud tool: default render output and compiled binary (but keep the
+# committed gallery asset docs/images/wordcloud.png trackable)
+/wordcloud.png
+wordcloud/wordcloud.png
+wordcloud/wordcloud
+
+# personal word cloud (not for the public repo)
+wordcloud/linkedin-background.json
+wordcloud/linkedin.png

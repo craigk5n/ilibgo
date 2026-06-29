@@ -29,7 +29,14 @@ type Config struct {
 	MaxSize    float64    `json:"maxSize,omitempty"`
 	Palette    []string   `json:"palette,omitempty"`
 	Seed       int64      `json:"seed,omitempty"`
-	Words      []WordSpec `json:"words,omitempty"`
+	// PreferHorizontal is the probability (0-1) a word is laid out horizontally;
+	// the rest are rotated 90°. 0 means "use the built-in default" (0.9). Set to
+	// 1 to keep every word horizontal.
+	PreferHorizontal float64 `json:"preferHorizontal,omitempty"`
+	// Margin is an empty border (in pixels) kept clear around the whole cloud, so
+	// words are not placed flush against the image edge. 0 = no margin.
+	Margin int        `json:"margin,omitempty"`
+	Words  []WordSpec `json:"words,omitempty"`
 }
 
 // defaultConfig returns a Config with sensible built-in values. The palette is a

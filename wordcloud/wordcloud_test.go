@@ -141,46 +141,49 @@ func TestSplitPalette(t *testing.T) {
 	}
 }
 
-func TestOverlapsAny(t *testing.T) {
-	boxes := []image.Rectangle{image.Rect(0, 0, 10, 10)}
-	if !overlapsAny(image.Rect(5, 5, 15, 15), boxes) {
-		t.Error("expected overlap")
+func TestOccMapRegionSumAndStamp(t *testing.T) {
+	m := newOccMap(100, 100, 10) // 10x10 grid
+	if got := m.regionSum(0, 0, 10, 10); got != 0 {
+		t.Fatalf("fresh map region sum = %d, want 0", got)
 	}
-	if overlapsAny(image.Rect(20, 20, 30, 30), boxes) {
-		t.Error("expected no overlap")
+	// Mark cells (2,2) and (3,2) occupied.
+	m.stamp(2, 2, [][2]int{{0, 0}, {1, 0}})
+	if got := m.regionSum(2, 2, 4, 3); got != 2 {
+		t.Errorf("stamped region sum = %d, want 2", got)
+	}
+	if got := m.regionSum(5, 5, 8, 8); got != 0 {
+		t.Errorf("untouched region sum = %d, want 0", got)
 	}
 }
 
-func TestSpiralFindCentersFirst(t *testing.T) {
-	canvas := image.Rect(0, 0, 200, 200)
-	pt, ok := spiralFind(20, 10, 100, 100, canvas, nil)
+func TestFindSpotEmptyMap(t *testing.T) {
+	m := newOccMap(200, 200, 10)
+	if _, _, ok := m.findSpot(3, 2, 0, 0, rand.New(rand.NewSource(1))); !ok {
+		t.Error("expected a free spot on an empty map")
+	}
+}
+
+func TestFindSpotAvoidsOccupied(t *testing.T) {
+	m := newOccMap(60, 20, 10) // 6x2 grid
+	// Occupy the entire left half so a 3x2 box must land on the right.
+	for gx := 0; gx < 3; gx++ {
+		for gy := 0; gy < 2; gy++ {
+			m.stamp(gx, gy, [][2]int{{0, 0}})
+		}
+	}
+	gx, gy, ok := m.findSpot(3, 2, 0, 0, rand.New(rand.NewSource(1)))
 	if !ok {
-		t.Fatal("expected placement")
+		t.Fatal("expected a placement on the free right half")
 	}
-	// First candidate is the center: box centered on (100,100).
-	if pt.X != 100-10 || pt.Y != 100-5 {
-		t.Errorf("first placement = %v, want centered (90,95)", pt)
-	}
-}
-
-func TestSpiralFindAvoidsOverlap(t *testing.T) {
-	canvas := image.Rect(0, 0, 200, 200)
-	// Occupy the center so the next word must spiral away.
-	occupied := []image.Rectangle{image.Rect(80, 80, 120, 120)}
-	pt, ok := spiralFind(20, 10, 100, 100, canvas, occupied)
-	if !ok {
-		t.Fatal("expected placement")
-	}
-	placed := image.Rect(pt.X, pt.Y, pt.X+20, pt.Y+10)
-	if placed.Overlaps(occupied[0]) {
-		t.Errorf("placement %v overlaps occupied %v", placed, occupied[0])
+	if m.regionSum(gx, gy, gx+3, gy+2) != 0 {
+		t.Errorf("placement (%d,%d) lands on occupied cells", gx, gy)
 	}
 }
 
-func TestSpiralFindNoRoom(t *testing.T) {
-	canvas := image.Rect(0, 0, 10, 10)
-	if _, ok := spiralFind(20, 20, 5, 5, canvas, nil); ok {
-		t.Error("box larger than canvas should not be placed")
+func TestFindSpotNoRoom(t *testing.T) {
+	m := newOccMap(20, 20, 10) // 2x2 grid
+	if _, _, ok := m.findSpot(3, 3, 0, 0, rand.New(rand.NewSource(1))); ok {
+		t.Error("box larger than grid should not be placed")
 	}
 }
 
