@@ -1,0 +1,22 @@
+{
+  "width": 800,
+  "height": 600,
+  "background": "white",
+  "dpi": 72,
+  "minSize": 16,
+  "maxSize": 96,
+  "palette": ["#1d3557", "#457b9d", "#e63946", "#2a9d8f", "#e9c46a"],
+  "seed": 1,
+  "words": [
+    { "text": "ilibgo", "size": 88, "color": "#e63946" },
+    { "text": "image", "count": 40 },
+    { "text": "wordcloud", "count": 32 },
+    { "text": "spiral", "count": 18 },
+    { "text": "truetype", "count": 14 },
+    { "text": "palette", "count": 10 },
+    { "text": "config", "count": 8 },
+    { "text": "golang", "count": 6 },
+    { "text": "render", "count": 4 },
+    { "text": "tiny", "count": 1 }
+  ]
+}
